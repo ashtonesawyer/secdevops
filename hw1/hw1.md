@@ -26,7 +26,7 @@ startup script.
 ![bsd network info](./img/bsd-network.png)
 
 ## Ubuntu 
-![ubuntu network info](./img/noble-netowrk.png)
+![ubuntu network info](./img/noble-network.png)
 
 ## .ssh/config
 ```

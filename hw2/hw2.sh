@@ -49,9 +49,12 @@ sudo ifconfig ${LAN} promisc
 sudo sysrc dnsmasq_enable="YES"
 
 # Edit dnsmasq configuration
-grep -q "interface=em1" /usr/local/etc/dnsmasq.conf || echo "interface=${LAN}" | sudo tee -a /usr/local/etc/dnsmasq.conf
-grep -q "^dhcp-range" /usr/local/etc/dnsmasq.conf || echo "dhcp-range=192.168.33.50,192.168.33.150,12h" | sudo tee -a /usr/local/etc/dnsmasq.conf
-grep -q "^dhcp-option" /usr/local/etc/dnsmasq.conf || echo "dhcp-option=option:router,192.168.33.1" | sudo tee -a /usr/local/etc/dnsmasq.conf
+grep -q "^interface=" /usr/local/etc/dnsmasq.conf || \
+	echo "interface=${LAN}" | sudo tee -a /usr/local/etc/dnsmasq.conf
+grep -q "^dhcp-range" /usr/local/etc/dnsmasq.conf || \
+	echo "dhcp-range=192.168.33.50,192.168.33.150,12h" | sudo tee -a /usr/local/etc/dnsmasq.conf
+grep -q "^dhcp-option" /usr/local/etc/dnsmasq.conf || \
+	echo "dhcp-option=option:router,192.168.33.1" | sudo tee -a /usr/local/etc/dnsmasq.conf
 
 # Configure PF for NAT
 echo "
@@ -118,6 +121,7 @@ sudo service pf start
 sudo pfctl -f /etc/pf.conf
 
 sudo sed -i '' 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i '' 's/#Port 22/Port 8022/g' /etc/ssh/sshd_config
 sudo service sshd restart
 
 hostname | xargs echo -n > ethers.txt

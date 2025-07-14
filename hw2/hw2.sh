@@ -124,6 +124,20 @@ sudo sed -i '' 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_confi
 sudo sed -i '' 's/#Port 22/Port 8022/g' /etc/ssh/sshd_config
 sudo service sshd restart
 
+# Install + Config Suricata
+sudo pkg install -y suricata
+sudo sysrc suricata_enable="YES"
+sudo sysrc suricata_netmap="YES"
+
+sudo suricata-update
+if [ ! -f /var/lib/suricata/rules/suricata.rules ]; then
+    echo "Failed to create rules file"
+    exit 1
+fi
+
+sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
+
+
 hostname | xargs echo -n > ethers.txt
 echo -n ',' >> ethers.txt
 ifconfig "$WAN" | awk -v wan="$WAN" '/ether/ {print wan" ← "$2}' | xargs echo -n >> ethers.txt

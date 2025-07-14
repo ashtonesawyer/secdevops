@@ -137,6 +137,14 @@ fi
 
 sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
 
+sudo sed -i '' '/^[[:space:]]*netmap:/a\
+\ - interface: em0\
+\ \ \ copy-mode: ips\
+\ \ \ copy-iface: em0^\
+\ - interface: em0^\
+\ \ \ copy-mode: ips\
+\ \ \ copy-iface: em0
+' /usr/local/etc/suricata/suricata.yaml
 
 hostname | xargs echo -n > ethers.txt
 echo -n ',' >> ethers.txt

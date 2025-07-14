@@ -135,6 +135,13 @@ Enables on startup:
 ...
 suricata_enable="YES"
 suricata_netmap="YES"
+
+```
+
+After reboot:
+```
+ > ps aux | grep suricata
+root      880   4.9 28.1 1907460 1162824  -  Ss   14:41   0:35.26 /usr/local/bin/suricata -D --netmap --pidfile /var/run/suricata.pid -c /usr/local/etc/suricata/suricata.yaml
 ```
 
 Install rules:

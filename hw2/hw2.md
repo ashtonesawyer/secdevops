@@ -134,7 +134,6 @@ Enables on startup:
 
 ...
 suricata_enable="YES"
-suricata_interface="em0"
 suricata_netmap="YES"
 ```
 

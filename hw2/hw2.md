@@ -133,9 +133,9 @@ Enables on startup:
  > cat /etc/rc.conf
 
 ...
-
 suricata_enable="YES"
 suricata_interface="em0"
+suricata_netmap="YES"
 ```
 
 Install rules:
@@ -159,27 +159,26 @@ Via quickstart guide and adding rules
 vars:
   # more specific is better for alert accuracy and performance
   address-groups:
-    HOME_NET: "[192.168.33.0/24,10.0.2.0/24]"
+    HOME_NET: "[192.168.33.0/24]"
 
 ...
 
-af-packet:
-  - interface: em0
+app-layer:
+  protocols:
+    ssh:
+      enabled: yes
+      detection-ports:
+        dp: 22, 8022
 
-...
-
-default-rule-path: /var/lib/suricata/rules
-
-rule-files:
-  - suricata.rules
-  - *.rules
-    
 ...
 
 # doesn't seem to want to run in netmap mode...
 netmap:
   - interface: em0
-    copy-mode: tap
+    copy-mode: ips
+    copy-iface: em0^
+  - interface: em0^
+    copy-mode: ips
     copy-iface: em0
 ```
     
@@ -187,14 +186,60 @@ At this point we can look at `suricata.log` and see that it's running
 
 ```
  > sudo tail /var/log/suricata/suricata.log
-[100153 - Suricata-Main] 2025-07-09 05:42:26 Info: threshold-config: Threshold config parsed: 0 rule(s) found
-[100153 - Suricata-Main] 2025-07-09 05:42:26 Info: detect: 44166 signatures processed. 948 are IP-only rules, 4364 are inspecting packet payload, 38632 inspect application layer, 109 are decoder event only
-[100153 - Suricata-Main] 2025-07-09 12:42:41 Info: runmodes: Using 1 live device(s).
-[100176 - RX#01-em0] 2025-07-09 12:42:42 Info: pcap: em0: running in 'auto' checksum mode. Detection of interface state will require 1000 packets
-[100176 - RX#01-em0] 2025-07-09 12:42:42 Info: ioctl: em0: MTU 1500
-[100176 - RX#01-em0] 2025-07-09 12:42:42 Info: pcap: em0: snaplen set to 1524
-[100153 - Suricata-Main] 2025-07-09 12:42:43 Info: unix-manager: unix socket '/var/run/suricata/suricata-command.socket'
-[100153 - Suricata-Main] 2025-07-09 12:42:43 Info: unix-manager: created socket directory /var/run/suricata/
-[100153 - Suricata-Main] 2025-07-09 12:42:43 Notice: threads: Threads created -> RX: 1 W: 2 FM: 1 FR: 1   Engine started.
-[100176 - RX#01-em0] 2025-07-09 12:42:59 Info: checksum: No packets with invalid checksum, assuming checksum offloading is NOT use
+[100088 - Suricata-Main] 2025-07-13 07:10:11 Info: detect: 1 rule files processed. 44163 rules successfully loaded, 0 rules failed, 0
+[100088 - Suricata-Main] 2025-07-13 07:10:11 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[100088 - Suricata-Main] 2025-07-13 07:10:11 Info: detect: 44166 signatures processed. 948 are IP-only rules, 4364 are inspecting packet payload, 38632 inspect application layer, 109 are decoder event only
+[100088 - Suricata-Main] 2025-07-13 14:10:22 Info: runmodes: Using 1 live device(s).
+[100153 - RX#01-em0] 2025-07-13 14:10:24 Info: pcap: em0: running in 'auto' checksum mode. Detection of interface state will require 1000 packets
+[100153 - RX#01-em0] 2025-07-13 14:10:24 Info: ioctl: em0: MTU 1500
+[100153 - RX#01-em0] 2025-07-13 14:10:24 Info: pcap: em0: snaplen set to 1524
+[100088 - Suricata-Main] 2025-07-13 14:10:24 Info: unix-manager: unix socket '/var/run/suricata/suricata-command.socket'
+[100088 - Suricata-Main] 2025-07-13 14:10:24 Notice: threads: Threads created -> RX: 1 W: 2 FM: 1 FR: 1   Engine started.
+[100153 - RX#01-em0] 2025-07-13 14:11:02 Info: checksum: No packets with invalid checksum, assuming checksum offloading is NOT used
+```
+
+Check if it's properly alerting (this is less thinking than figuring out what that other rules alert on...)
+
+```
+ > sudo vim /var/lib/suricata/rules/suricata.rules
+
+ > head /var/lib/suricata/rules/suricata.rules
+alert ip any any -> any any (msg:"DBG"; sid:11000000; rev:1;)
+...
+
+ > curl ifconfig.io
+131.252.54.184
+
+ > sudo cat /var/log/suricata/fast.log
+...
+
+07/14/2025-10:00:00.250423  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:123 -> 141.11.228.173:123
+07/14/2025-10:00:00.328993  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 141.11.228.173:123 -> 10.0.2.15:123
+07/14/2025-10:00:02.248333  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:123 -> 143.42.229.154:123
+07/14/2025-10:00:02.317334  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 143.42.229.154:123 -> 10.0.2.15:123
+07/14/2025-10:00:13.250081  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:123 -> 144.202.66.214:123
+07/14/2025-10:00:13.302504  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 144.202.66.214:123 -> 10.0.2.15:123
+07/14/2025-10:00:13.251883  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:123 -> 69.30.247.121:123
+07/14/2025-10:00:13.300207  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 69.30.247.121:123 -> 10.0.2.15:123
+07/14/2025-10:00:14.250867  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:123 -> 66.228.58.20:123
+07/14/2025-10:00:14.313010  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 66.228.58.20:123 -> 10.0.2.15:123
+07/14/2025-10:03:04.408615  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:23341 -> 10.0.2.3:53
+07/14/2025-10:03:04.432146  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.3:53 -> 10.0.2.15:23341
+07/14/2025-10:03:04.432841  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.15:43897 -> 10.0.2.3:53
+07/14/2025-10:03:04.436552  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {UDP} 10.0.2.3:53 -> 10.0.2.15:43897
+07/14/2025-10:03:04.443052  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {TCP} 10.0.2.15:54724 -> 172.67.191.233:80
+07/14/2025-10:03:04.450771  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {TCP} 172.67.191.233:80 -> 10.0.2.15:54724
+```
+
+SMBGhost Rules
+```
+# from https://github.com/vncloudsco/suricata-rules/blob/main/emerging-exploit.rules
+alert smb any any -> $HOME_NET any (msg:"ET EXPLOIT Possible Attempted SMB RCE Exploitation M1 (CVE-2020-0796)"; flow:established,to_server; content:"|41 8B 47 3C 4C 01 F8 8B 80 88 00 00 00 4C 01 F8 50|"; fast_pattern; reference:url,github.com/chompie1337/SMBGhost_RCE_PoC; reference:cve,2020-0796; classtype:attempted-admin; sid:2030263; rev:2; metadata:affected_product SMBv3, created_at 2020_06_08, deployment Perimeter, deployment Internal, former_category EXPLOIT, performance_impact Low, signature_severity Major, tag SMBGhost, updated_at 2020_06_08;)
+
+alert smb any any -> $HOME_NET any (msg:"ET EXPLOIT Possible Attempted SMB RCE Exploitation M2 (CVE-2020-0796)"; flow:established,to_server; content:"|FF C9 8B 34 8B 4C 01 FE|"; fast_pattern; reference:url,github.com/chompie1337/SMBGhost_RCE_PoC; reference:cve,2020-0796; classtype:attempted-admin; sid:2030264; rev:2; metadata:affected_product SMBv3, created_at 2020_06_08, deployment Perimeter, deployment Internal, former_category EXPLOIT, performance_impact Low, signature_severity Major, tag SMBGhost, updated_at 2020_06_08;)
+
+# from https://github.com/vncloudsco/suricata-rules/blob/main/pt-rules.rules
+alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/RCE Attempt (CVE-2020-0796)"; flow: established; content: "|FC|SMB"; depth: 8; byte_test: 4, >, 0x800134, 8, relative, little; reference: url, www.mcafee.com/blogs/other-blogs/mcafee-labs/smbghost-analysis-of-cve-2020-0796; reference: cve, 2020-0796; reference: url, github.com/ptresearch/AttackDetection; classtype: attempted-admin; sid: 10005777; rev: 2;)
+
+alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/RCE Attempt (CVE-2020-0796)"; flow: established; content: "|FC|SMB"; depth: 8; byte_test: 4, >, 0x800134, 0, relative, little; reference: url, www.mcafee.com/blogs/other-blogs/mcafee-labs/smbghost-analysis-of-cve-2020-0796; reference: cve, 2020-0796; reference: url, github.com/ptresearch/AttackDetection; classtype: attempted-admin; sid: 10005778; rev: 2;)
 ```

@@ -60,7 +60,7 @@ int_if=\"${LAN}\"
 
 icmp_types = \"{ echoreq, unreach }\"
 services = \"{ ssh, domain, http, ntp, https }\"
-server = \"192.168.33.63\"
+server = \"192.168.33.69\"
 ssh_rdr = \"2222\"
 table <rfc6890> { 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16          \\
                   172.16.0.0/12 192.0.0.0/24 192.0.0.0/29 192.0.2.0/24 192.88.99.0/24    \\
@@ -78,6 +78,9 @@ scrub in all fragment reassemble max-mss 1440
 #NAT rules
 nat on \$ext_if from \$int_if:network to any -> (\$ext_if)
 
+#redirect rules
+rdr pass log on \$ext_if inet proto tcp form any to port ssh -> \$server port ssh
+
 #blocking rules
 antispoof quick for \$ext_if
 block in quick log on egress from <rfc6890>
@@ -92,11 +95,13 @@ pass out quick on \$int_if inet proto udp from \$int_if:0 port = bootps to any p
 pass in quick on \$ext_if inet proto udp from any port = bootps to \$ext_if:0 port = bootpc keep state label \"allow access to DHCP client\"
 pass out quick on \$ext_if inet proto udp from \$ext_if:0 port = bootpc to any port = bootps keep state label \"allow access to DHCP client\"
 
-pass in on \$ext_if proto tcp to port { ssh } keep state (max-src-conn 15, max-src-conn-rate 3/1, overload <bruteforce> flush global)
+pass in on \$ext_if proto tcp to port { ssh, 8022 } keep state (max-src-conn 15, max-src-conn-rate 3/1, overload <bruteforce> flush global)
 pass out on \$ext_if proto { tcp, udp } to port \$services
 pass out on \$ext_if inet proto icmp icmp-type \$icmp_types
 pass in on \$int_if from \$int_if:network to any
 pass out on \$int_if from \$int_if:network to any
+
+pass out on \$int_if proto tcp from any to \$server port { ssh } keep state
 " | sudo tee /etc/pf.conf
 
 # Start dnsmasq

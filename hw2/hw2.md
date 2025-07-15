@@ -264,3 +264,10 @@ multiple POC exploits and the sockets wouldn't connect (I'm assuming because
 of the firewall) and I couldn't find any packet captures that would do the 
 trick. 
 
+# hw2.sh
+I'm *pretty* sure that this script works and could be run multiple times
+without issue. I haven't fully tested it on a new install because that takes 
+more time than I have right now. But I have tested the individual pieces that I
+added on some dummy files. It's possible that I missed something from the 
+original script that needs to be changed in order for re-running it to be safe,
+but I don't think I did. 

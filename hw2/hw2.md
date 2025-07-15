@@ -156,8 +156,8 @@ properly run in netmap mode, as the interface is pulled out of the config.
 But editing `rc.conf` is way less work, so I did do that first. Suricata
 just wasn't running properly until I got this done. 
 
-Also... I did add 8022 to the detection ports and SSH port group. I don't
-actually know what that does, but it seemed like a reasonable thing to do. 
+Also... I did add 8022 to the SSH port group. I don't actually know what that
+does, but it seemed like a reasonable thing to do. 
 
 ```
  > sudo vim /usr/local/etc/suricata/suricata.yaml
@@ -175,15 +175,6 @@ vars:
     DNP3_PORTS: 20000
     MODBUS_PORTS: 502
     FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
-
-...
-
-app-layer:
-  protocols:
-    ssh:
-      enabled: yes
-      detection-ports:
-        dp: 22, 8022
 
 ...
 

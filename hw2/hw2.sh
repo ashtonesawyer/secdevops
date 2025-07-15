@@ -124,20 +124,33 @@ sudo sed -i '' 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_confi
 sudo sed -i '' 's/#Port 22/Port 8022/g' /etc/ssh/sshd_config
 sudo service sshd restart
 
-# Install + Config Suricata
+# Suricata
+# -- install
 sudo pkg install -y suricata
 sudo sysrc suricata_enable="YES"
 sudo sysrc suricata_netmap="YES"
 
+# -- rules
 sudo suricata-update
 if [ ! -f /var/lib/suricata/rules/suricata.rules ]; then
     echo "Failed to create rules file"
     exit 1
 fi
 
-sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
+grep -qi smbghost /var/lib/suricata/rules/suricata.rules || \
+	echo '# from https://github.com/vncloudsco/suricata-rules/blob/main/emerging-exploit.rules
+alert smb any any -> $HOME_NET any (msg:"ET EXPLOIT Possible Attempted SMB RCE Exploitation M1 (CVE-2020-0796)"; flow:established,to_server; content:"|41 8B 47 3C 4C 01 F8 8B 80 88 00 00 00 4C 01 F8 50|"; fast_pattern; reference:url,github.com/chompie1337/SMBGhost_RCE_PoC; reference:cve,2020-0796; classtype:attempted-admin; sid:2030263; rev:2; metadata:affected_product SMBv3, created_at 2020_06_08, deployment Perimeter, deployment Internal, former_category EXPLOIT, performance_impact Low, signature_severity Major, tag SMBGhost, updated_at 2020_06_08;)
+alert smb any any -> $HOME_NET any (msg:"ET EXPLOIT Possible Attempted SMB RCE Exploitation M2 (CVE-2020-0796)"; flow:established,to_server; content:"|FF C9 8B 34 8B 4C 01 FE|"; fast_pattern; reference:url,github.com/chompie1337/SMBGhost_RCE_PoC; reference:cve,2020-0796; classtype:attempted-admin; sid:2030264; rev:2; metadata:affected_product SMBv3, created_at 2020_06_08, deployment Perimeter, deployment Internal, former_category EXPLOIT, performance_impact Low, signature_severity Major, tag SMBGhost, updated_at 2020_06_08;)
+# from https://github.com/vncloudsco/suricata-rules/blob/main/pt-rules.rules
+alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/RCE Attempt (CVE-2020-0796)"; flow: established; content: "|FC|SMB"; depth: 8; byte_test: 4, >, 0x800134, 8, relative, little; reference: url, www.mcafee.com/blogs/other-blogs/mcafee-labs/smbghost-analysis-of-cve-2020-0796; reference: cve, 2020-0796; reference: url, github.com/ptresearch/AttackDetection; classtype: attempted-admin; sid: 10005777; rev: 2;)
+alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/RCE Attempt (CVE-2020-0796)"; flow: established; content: "|FC|SMB"; depth: 8; byte_test: 4, >, 0x800134, 0, relative, little; reference: url, www.mcafee.com/blogs/other-blogs/mcafee-labs/smbghost-analysis-of-cve-2020-0796; reference: cve, 2020-0796; reference: url, github.com/ptresearch/AttackDetection; classtype: attempted-admin; sid: 10005778; rev: 2;)' | sudo tee -a /var/lib/suricata/rules/suricata.rules
 
-sudo sed -i '' '/^[[:space:]]*netmap:/a\
+# -- config
+sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
+sudo sed -i '' 's/^\([[:space:]]*SSH_PORTS: \)22\(.*\)$/\1"[22, 8022]"\2/' tmp.yaml
+
+grep -q "copy-iface: em0^" /usr/local/etc/suricata/suricata.yaml || \
+	sudo sed -i '' '/^[[:space:]]*netmap:/a\
 \ - interface: em0\
 \ \ \ copy-mode: ips\
 \ \ \ copy-iface: em0^\

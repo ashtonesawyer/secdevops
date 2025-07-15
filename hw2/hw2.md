@@ -91,17 +91,7 @@ If you want to run Suricata in IDS mode, add to /etc/rc.conf:
 
 NOTE: Declaring suricata_interface is MANDATORY for Suricata in IDS Mode.
 
-However, if you want to run Suricata in Inline IPS Mode in divert(4) mode,
-add to /etc/rc.conf:
-
-        suricata_enable="YES"
-        suricata_divertport="8000"
-
-NOTE:
-        Suricata won't start in IDS mode without an interface configured.
-        Therefore if you omit suricata_interface from rc.conf, FreeBSD's
-        rc.d/suricata will automatically try to start Suricata in IPS Mode
-        (on divert port 8000, by default).
+...
 
 Alternatively, if you want to run Suricata in Inline IPS Mode in high-speed
 netmap(4) mode, add to /etc/rc.conf:
@@ -113,17 +103,7 @@ NOTE:
         Suricata requires additional interface settings in the configuration
         file to run in netmap(4) mode.
 
-RULES: Suricata IDS/IPS Engine comes without rules by default. You should
-add rules by yourself and set an updating strategy. To do so, please visit:
-
- http://www.openinfosecfoundation.org/documentation/rules.html
- http://www.openinfosecfoundation.org/documentation/emerging-threats.html
-
-You may want to try BPF in zerocopy mode to test performance improvements:
-
-        sysctl -w net.bpf.zerocopy_enable=1
-
-Don't forget to add net.bpf.zerocopy_enable=1 to /etc/sysctl.conf
+...
 ```
 
 ## Config
@@ -140,13 +120,8 @@ suricata_netmap="YES"
 
 ```
 
-This particular `rc.conf` went through a few iterations. The documentation says
-to start Suricata in netmap mode with `sudo suritcata --netmap`, which would
-suggest that rather than `suricata_netmap="YES"` there should be 
-`suricata_flags="--netmap"`. This did not work. I'm not entirely sure why it 
-didn't work because the error went by too quickly during boot up to actually
-read. But it didn't work. But, after rebooting the machine, you can see in 
-the process information that `suricata_netmap="YES"` does in fact work.
+We know that this configuration works because after a reboot we can see that 
+Suricata is running, and it's running in netmap mode as intended.
 
 ```
  > ps aux | grep suricata

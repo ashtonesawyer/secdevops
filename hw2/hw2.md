@@ -75,7 +75,7 @@ Host noble
 
 # Suricata
 
-## Install + Basic Config
+## Install 
 ```
  > sudo pkg install suricata
 
@@ -126,7 +126,9 @@ You may want to try BPF in zerocopy mode to test performance improvements:
 Don't forget to add net.bpf.zerocopy_enable=1 to /etc/sysctl.conf
 ```
 
-Enables on startup:
+## Config
+First I made sure Suricata was enabled on start up. 
+
 ```
  > sudo vim /etc/rc.conf
 
@@ -138,13 +140,23 @@ suricata_netmap="YES"
 
 ```
 
-After reboot:
+This particular `rc.conf` went through a few iterations. The documentation says
+to start Suricata in netmap mode with `sudo suritcata --netmap`, which would
+suggest that rather than `suricata_netmap="YES"` there should be 
+`suricata_flags="--netmap"`. This did not work. I'm not entirely sure why it 
+didn't work because the error went by too quickly during boot up to actually
+read. But it didn't work. But, after rebooting the machine, you can see in 
+the process information that `suricata_netmap="YES"` does in fact work.
+
 ```
  > ps aux | grep suricata
 root      880   4.9 28.1 1907460 1162824  -  Ss   14:41   0:35.26 /usr/local/bin/suricata -D --netmap --pidfile /var/run/suricata.pid -c /usr/local/etc/suricata/suricata.yaml
 ```
 
-Install rules:
+The next big thing was to actually get some rules. Suricata by default doesn't
+come with any rules installed. That doesn't mean you have to add them all 
+yourself, though. 
+
 ```
  > sudo suricata-update
 
@@ -156,7 +168,21 @@ Install rules:
 9/7/2025 -- 11:55:15 - <Info> -- Done.
 ```
 
-Via quickstart guide and adding rules
+This installs a whole host of rules, most of which are activated by default. 
+Some are installed, but left commented out in the `suricata.rules` file. 
+I didn't bother activating any of the rules that were left off by default. 
+Skimming through the rules file, most of them seemed fairly niche and like
+I wasn't missing much without them. 
+
+
+After I installed the rules, I did a little bit more configuring in 
+`suricata.yaml`. Honestly, this configuration needs to happen before you can
+properly run in netmap mode, as the interface is pulled out of the config.
+But editing `rc.conf` is way less work, so I did do that first. Suricata
+just wasn't running properly until I got this done. 
+
+Also... I did add 8022 to the detection ports and SSH port group. I don't
+actually know what that does, but it seemed like a reasonable thing to do. 
 
 ```
  > sudo vim /usr/local/etc/suricata/suricata.yaml
@@ -166,6 +192,14 @@ vars:
   # more specific is better for alert accuracy and performance
   address-groups:
     HOME_NET: "[192.168.33.0/24]"
+
+  ...
+
+  port-groups:
+    SSH_PORTS: "[22,8022]"
+    DNP3_PORTS: 20000
+    MODBUS_PORTS: 502
+    FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
 
 ...
 
@@ -178,7 +212,6 @@ app-layer:
 
 ...
 
-# doesn't seem to want to run in netmap mode...
 netmap:
   - interface: em0
     copy-mode: ips
@@ -188,23 +221,30 @@ netmap:
     copy-iface: em0
 ```
     
-At this point we can look at `suricata.log` and see that it's running
+At this point we can look at `suricata.log` and see that it's running and has
+rules loaded. 
 
 ```
- > sudo tail /var/log/suricata/suricata.log
-[100088 - Suricata-Main] 2025-07-13 07:10:11 Info: detect: 1 rule files processed. 44163 rules successfully loaded, 0 rules failed, 0
-[100088 - Suricata-Main] 2025-07-13 07:10:11 Info: threshold-config: Threshold config parsed: 0 rule(s) found
-[100088 - Suricata-Main] 2025-07-13 07:10:11 Info: detect: 44166 signatures processed. 948 are IP-only rules, 4364 are inspecting packet payload, 38632 inspect application layer, 109 are decoder event only
-[100088 - Suricata-Main] 2025-07-13 14:10:22 Info: runmodes: Using 1 live device(s).
-[100153 - RX#01-em0] 2025-07-13 14:10:24 Info: pcap: em0: running in 'auto' checksum mode. Detection of interface state will require 1000 packets
-[100153 - RX#01-em0] 2025-07-13 14:10:24 Info: ioctl: em0: MTU 1500
-[100153 - RX#01-em0] 2025-07-13 14:10:24 Info: pcap: em0: snaplen set to 1524
-[100088 - Suricata-Main] 2025-07-13 14:10:24 Info: unix-manager: unix socket '/var/run/suricata/suricata-command.socket'
-[100088 - Suricata-Main] 2025-07-13 14:10:24 Notice: threads: Threads created -> RX: 1 W: 2 FM: 1 FR: 1   Engine started.
-[100153 - RX#01-em0] 2025-07-13 14:11:02 Info: checksum: No packets with invalid checksum, assuming checksum offloading is NOT used
+ > sudo tail -n 11 /var/log/suricata/suricata.log
+[100151 - Suricata-Main] 2025-07-14 12:53:03 Info: detect: 1 rule files processed. 44167 rules successfully loaded, 0 rules failed, 0
+[100151 - Suricata-Main] 2025-07-14 12:53:03 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[100151 - Suricata-Main] 2025-07-14 12:53:03 Info: detect: 44170 signatures processed. 948 are IP-only rules, 4368 are inspecting packet payload, 38632 inspect application layer, 109 are decoder event only
+[100151 - Suricata-Main] 2025-07-14 19:53:17 Info: runmodes: em0: creating 1 thread
+[100161 - W#01-em0] 2025-07-14 19:53:21 Info: netmap: netmap:em0/R: em0 opened [fd: 7]
+[100161 - W#01-em0] 2025-07-14 19:53:22 Info: netmap: netmap:em0^/T: em0^ opened [fd: 8]
+[100151 - Suricata-Main] 2025-07-14 19:53:22 Info: runmodes: em0^: creating 1 thread
+[100171 - W#01-em0^] 2025-07-14 19:53:23 Info: netmap: netmap:em0^/R: em0^ opened [fd: 9]
+[100171 - W#01-em0^] 2025-07-14 19:53:25 Info: netmap: netmap:em0/T: em0 opened [fd: 10]
+[100151 - Suricata-Main] 2025-07-14 19:53:25 Info: unix-manager: unix socket '/var/run/suricata/suricata-command.socket'
+[100151 - Suricata-Main] 2025-07-14 19:53:25 Notice: threads: Threads created -> W: 2 FM: 1 FR: 1   Engine started.
 ```
 
-Check if it's properly alerting (this is less thinking than figuring out what that other rules alert on...)
+Now we need to check if it's actually going to alert on things
+(we're running in IPS mode, so it could drop packets, but I didn't see any 
+default rules that actually dropped traffic). The best thing to do probably
+would have been finding a real payload that would trigger a rule. The lazy 
+thing to do is to add a rule that should trigger on literally everything and
+see if it does. I chose the lazy option. 
 
 ```
  > sudo vim /var/lib/suricata/rules/suricata.rules
@@ -237,15 +277,24 @@ alert ip any any -> any any (msg:"DBG"; sid:11000000; rev:1;)
 07/14/2025-10:03:04.450771  [**] [1:11000000:1] DBG [**] [Classification: (null)] [Priority: 3] {TCP} 172.67.191.233:80 -> 10.0.2.15:54724
 ```
 
-SMBGhost Rules
+## SMBGhost
+One of the requirements is to make sure Suricata is protecting against SMBGhost
+(CVE-2020-0796) attacks. I grabbed some rules off of the internet and generally
+trust that probably they work okay maybe.
+
 ```
 # from https://github.com/vncloudsco/suricata-rules/blob/main/emerging-exploit.rules
 alert smb any any -> $HOME_NET any (msg:"ET EXPLOIT Possible Attempted SMB RCE Exploitation M1 (CVE-2020-0796)"; flow:established,to_server; content:"|41 8B 47 3C 4C 01 F8 8B 80 88 00 00 00 4C 01 F8 50|"; fast_pattern; reference:url,github.com/chompie1337/SMBGhost_RCE_PoC; reference:cve,2020-0796; classtype:attempted-admin; sid:2030263; rev:2; metadata:affected_product SMBv3, created_at 2020_06_08, deployment Perimeter, deployment Internal, former_category EXPLOIT, performance_impact Low, signature_severity Major, tag SMBGhost, updated_at 2020_06_08;)
-
 alert smb any any -> $HOME_NET any (msg:"ET EXPLOIT Possible Attempted SMB RCE Exploitation M2 (CVE-2020-0796)"; flow:established,to_server; content:"|FF C9 8B 34 8B 4C 01 FE|"; fast_pattern; reference:url,github.com/chompie1337/SMBGhost_RCE_PoC; reference:cve,2020-0796; classtype:attempted-admin; sid:2030264; rev:2; metadata:affected_product SMBv3, created_at 2020_06_08, deployment Perimeter, deployment Internal, former_category EXPLOIT, performance_impact Low, signature_severity Major, tag SMBGhost, updated_at 2020_06_08;)
-
 # from https://github.com/vncloudsco/suricata-rules/blob/main/pt-rules.rules
 alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/RCE Attempt (CVE-2020-0796)"; flow: established; content: "|FC|SMB"; depth: 8; byte_test: 4, >, 0x800134, 8, relative, little; reference: url, www.mcafee.com/blogs/other-blogs/mcafee-labs/smbghost-analysis-of-cve-2020-0796; reference: cve, 2020-0796; reference: url, github.com/ptresearch/AttackDetection; classtype: attempted-admin; sid: 10005777; rev: 2;)
-
 alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/RCE Attempt (CVE-2020-0796)"; flow: established; content: "|FC|SMB"; depth: 8; byte_test: 4, >, 0x800134, 0, relative, little; reference: url, www.mcafee.com/blogs/other-blogs/mcafee-labs/smbghost-analysis-of-cve-2020-0796; reference: cve, 2020-0796; reference: url, github.com/ptresearch/AttackDetection; classtype: attempted-admin; sid: 10005778; rev: 2;)
 ```
+
+I haven't actually checked to make sure that these rules work. I haven't read
+about SMBGhost to try and parse out if they work in theory. I'm not actually
+running an SMB server and port 445 is fully blocked on the firewall. I tried 
+multiple POC exploits and the sockets wouldn't connect (I'm assuming because 
+of the firewall) and I couldn't find any packet captures that would do the 
+trick. 
+

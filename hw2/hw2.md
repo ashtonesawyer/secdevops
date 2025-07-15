@@ -10,7 +10,7 @@ ssh-ing to bsd I need another port that doesn't get redirected.
 The first set in doing so was to create another port forward from my local 
 machine to the VirtualBox VM. 
 
-![port forward](./img/port_forward.png)
+![port forward](./img/port-forward.png)
 
 Then, I adjusted the firewall rule to allow traffic on port 8022. 
 

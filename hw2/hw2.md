@@ -267,7 +267,7 @@ trick.
 # hw2.sh
 I tested the script I wrote in two ways. First, I tested the pieces that I
 added on dummy files until I was fairly confident it would work. Then, I spun
-up a new FreeBSD vm to see how well it would actually work on a fresh install. 
+up a new FreeBSD VM to see how well it would actually work on a fresh install. 
 
 Suprisingly, I had to change one of the packages that are installed in the 
 beginning. `ruby32-gems` wasn't found by the package manager. After sniffing
@@ -275,3 +275,11 @@ around for a little bit, I realised it had been updated to `rudy33-gems`.
 
 Actually trying it on a new VM also helped me find a few typos, but those aren't
 as fun to talk about. 
+
+I'm very content with it right now. `lolcat` still doesn't want to install
+correctly the first time around, but that's minor and was a problem previously,
+so I don't feel like I have to go and try to fix it. There's also a little 
+prompt if you re-run the script about how a `pyenv` thing is already installed.
+It's not the cleanest, but there are other spots where you're prompted for
+something (usually password) while the script runs, so it's not totally
+out of left field.

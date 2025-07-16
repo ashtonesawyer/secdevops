@@ -148,6 +148,8 @@ alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/
 # -- config
 sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
 sudo sed -i '' 's/^\([[:space:]]*SSH_PORTS: \)22\(.*\)$/\1"[22, 8022]"\2/' /usr/local/etc/suricata/suricata.yaml
+# this comments out more than just netmap section... but it should be fine? 
+sudo sed -i '' -E '/^[[:space:]]*- interface: eth.*/ s/^/#/' /usr/local/etc/suricata/suricata.yaml
 
 grep -q "copy-iface: em0^" /usr/local/etc/suricata/suricata.yaml || \
 	sudo sed -i '' '/^[[:space:]]*netmap:/a\

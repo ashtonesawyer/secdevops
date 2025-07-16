@@ -82,7 +82,7 @@ scrub in all fragment reassemble max-mss 1440
 nat on \$ext_if from \$int_if:network to any -> (\$ext_if)
 
 #redirect rules
-rdr pass log on \$ext_if inet proto tcp form any to port ssh -> \$server port ssh
+rdr pass log on \$ext_if inet proto tcp from any to port ssh -> \$server port ssh
 
 #blocking rules
 antispoof quick for \$ext_if
@@ -148,8 +148,9 @@ alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/
 # -- config
 sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
 sudo sed -i '' 's/^\([[:space:]]*SSH_PORTS: \)22\(.*\)$/\1"[22, 8022]"\2/' /usr/local/etc/suricata/suricata.yaml
-# this comments out more than just netmap section... but it should be fine? 
-sudo sed -i '' -E '/^[[:space:]]*- interface: eth.*/ s/^/#/' /usr/local/etc/suricata/suricata.yaml
+# these comment out more than just netmap section... but it should be fine?
+sudo sed -i '' '/^[[:space:]]*- interface: eth.*/ s/^/#/' /usr/local/etc/suricata/suricata.yaml
+sudo sed -i '' '/^[[:space:]]*- interface: default*/ s/^/#/' /usr/local/etc/suricata/suricata.yaml
 
 grep -q "copy-iface: em0^" /usr/local/etc/suricata/suricata.yaml || \
 	sudo sed -i '' '/^[[:space:]]*netmap:/a\

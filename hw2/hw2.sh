@@ -17,7 +17,7 @@ WAN="em0"
 LAN="em1"
 
 # Install dnsmasq
-sudo pkg install -y dnsmasq shfmt groff eza tmux zsh vim emacs git groff gdb bat figlet filters cowsay lolcat fontforge doxygen gawk hexyl sipcalc direnv wireshark tcpdump ruby ruby32-gems pyenv atuin fastfetch sunwait diff-so-fancy btop autojump fzf cmake bat-extras
+sudo pkg install -y dnsmasq shfmt groff eza tmux zsh vim emacs git groff gdb bat figlet filters cowsay lolcat fontforge doxygen gawk hexyl sipcalc direnv wireshark tcpdump ruby ruby33-gems pyenv atuin fastfetch sunwait diff-so-fancy btop autojump fzf cmake bat-extras
 
 if [ $? -ne 0 ]; then
     echo "Failed to install packages"
@@ -147,7 +147,7 @@ alert tcp any any -> any any (msg: "ATTACK [PTsecurity] CoronaBlue/SMBGhost DOS/
 
 # -- config
 sudo sed -i '' 's/^\([[:space:]]*HOME_NET: *"\)\[.*\]\(".*\)$/\1[192.168.33.0\/24]\2/' /usr/local/etc/suricata/suricata.yaml
-sudo sed -i '' 's/^\([[:space:]]*SSH_PORTS: \)22\(.*\)$/\1"[22, 8022]"\2/' tmp.yaml
+sudo sed -i '' 's/^\([[:space:]]*SSH_PORTS: \)22\(.*\)$/\1"[22, 8022]"\2/' /usr/local/etc/suricata/suricata.yaml
 
 grep -q "copy-iface: em0^" /usr/local/etc/suricata/suricata.yaml || \
 	sudo sed -i '' '/^[[:space:]]*netmap:/a\

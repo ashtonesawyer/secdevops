@@ -89,3 +89,19 @@ can still be accessed.
 ```
  $ sed -i 's/#Port 22/Port 8022/' /etc/ssh/sshd_config
 ```
+
+# Setting up templates
+I set up two templates: one for FreeBSD and one for Ubuntu. Both were set up 
+primarily from the command line, though some tweaks were done using the UI. 
+
+## Cloud Images
+```
+ $ sudo bash
+ $ cd /var/lib/vz/images
+ $ curl -LO https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.imh
+ $ curl -LO FreeBSD-14.3-STABLE-amd64-BASIC-CLOUDINIT-20250724-f0a7a1bda375-272016-ufs.qcow2.xz
+ $ unxz FreeBSD-14.3-STABLE-amd64-BASIC-CLOUDINIT-20250724-f0a7a1bda375-272016-ufs.qcow2.xz
+```
+
+## Setting up the Ubuntu template
+

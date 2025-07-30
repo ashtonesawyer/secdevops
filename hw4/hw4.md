@@ -141,3 +141,58 @@ The process is much the same as above. There are a couple changes:
 After creating the template as above, I also added another NIC using the web 
 UI. Go to template-freebsd > Hardware > Add > Network Device and add a E1000
 on the internal network. I also changed net0 from virtio to e1000. 
+
+# Terraform (OpenTofu)
+I split my terraform script up into two files: one for the provider and one for
+the actual machines. 
+
+## providers.tf
+```tf
+terraform {
+        required_version = ">= 0.15"
+        required_providers {
+                proxmox = {
+                        source = "telmate/proxmox"
+                        version = "3.0.2-rc03"
+                }
+        }
+}
+
+provider "proxmox" {
+        pm_debug = true
+        pm_tls_insecure = true
+
+        pm_api_url = "https://systemsec-04.cs.pdx.edu:8006/api2/json"
+}
+```
+
+## main.tf
+```
+```
+
+## Running 
+```
+ $ tofu init
+Initializing the backend...
+
+Initializing provider plugins...
+- Finding telmate/proxmox versions matching "3.0.2-rc03"...
+- Installing telmate/proxmox v3.0.2-rc03...
+- Installed telmate/proxmox v3.0.2-rc03. Signature validation was skipped due to the registry not containing GPG keys for this provider
+
+OpenTofu has created a lock file .terraform.lock.hcl to record the provider
+selections it made above. Include this file in your version control repository
+so that OpenTofu can guarantee to make the same selections by default when
+you run "tofu init" in the future.
+
+OpenTofu has been successfully initialized!
+
+You may now begin working with OpenTofu. Try running "tofu plan" to see
+any changes that are required for your infrastructure. All OpenTofu commands
+should now work.
+
+ $ export PM_USER=student@pve
+ $ export PM_PASS=<password>
+
+ $ tofu plan
+```

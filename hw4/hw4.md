@@ -196,3 +196,7 @@ should now work.
 
  $ tofu plan
 ```
+
+
+NOTE:  
+rm eth0 renaming from rc.conf after cloud init

@@ -105,3 +105,39 @@ primarily from the command line, though some tweaks were done using the UI.
 
 ## Setting up the Ubuntu template
 
+```
+$  qemu-img resize ubuntu-24.04-server-cloudimg-amd64.img 32G
+$  qm create 1000 --name "template-ubuntu" --ostype l26 --memory 4096 --agent 1 --bios seabios --machine q35 --cpu host --socket 1 --cores 4 --vga serial0 --serial0 socket --net0 virtio,bridge=vnet0
+$  qm importdisk 1000 ubuntu-24.04-server-cloudimg-amd64.img local-lvm
+$  qm set 1000 --scsihw virtio-scsi-pci --virtio0 local-lvm:vm-1000-disk-0,discard=on
+$  qm set 1000 --boot order=virtio0
+$  qm set 1000 --ide2 local-lvm:cloudinit
+$  cat << EOF | tee /var/lib/vz/snippets/vendor.yaml
+#cloud-config
+runcmd:
+   - apt update
+   - apt install -y qemu-guest-agent
+   - systemctl start qemu-guest-agent
+   - reboot
+EOF
+ $  qm set 1000 --cicustom "vendor=local:snippets/vendor.yaml"
+ $  qm set 1000 --ciuser student
+ $  qm set 1000 --cipassword $(openssl passwd -6 super_secret_password)
+ $  qm set 1000 --ipconfig0 ip=dhcp
+ $  qm cloudinit update 1000
+ $  qm template 1000
+```
+
+At the end of these commands, we have a template ubuntu server with default
+creds `student:super_secret_password` that can be cloned. 
+
+## Setting up the FreeBSD template
+The process is much the same as above. There are a couple changes:
+- use the FreeBSD image in `resize` and `importdisk`
+- change the name to `template-freebsd` in `create`
+- The ID will be 1001 instead of 1000
+- Skip creating `/var/lib/vz/snippets/vendor.yaml`
+
+After creating the template as above, I also added another NIC using the web 
+UI. Go to template-freebsd > Hardware > Add > Network Device and add a E1000
+on the internal network. I also changed net0 from virtio to e1000. 

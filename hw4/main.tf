@@ -4,9 +4,9 @@ resource "proxmox_vm_qemu" "bastion" {
 	target_node 	= "systemsec-04"
 	clone 		= "template-freebsd"
 	vmid		= 100
+	agent		= 1
 
 	memory 		= 4096
-	balloon		= 1
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"
@@ -15,7 +15,6 @@ resource "proxmox_vm_qemu" "bastion" {
 	cicustom	= "vendor=local:snippets/freebsd.yaml"
 	ciuser		= "sawyeras"
    cipassword = "PASSWD_HASH"
-	
 
 	cpu {
 		cores = 4
@@ -44,7 +43,7 @@ resource "proxmox_vm_qemu" "bastion" {
 		storage = "local-lvm"
 		size = "32G"
 	}
-
+	
 	serial {
 		id = 0
 		type = "socket"
@@ -58,9 +57,9 @@ resource "proxmox_vm_qemu" "server0" {
 	target_node	= "systemsec-04"
 	clone		= "template-ubuntu"
 	vmid		= 101
+	agent		= 1
 
 	memory		= 4096
-	balloon		= 1
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"
@@ -104,9 +103,9 @@ resource "proxmox_vm_qemu" "server1" {
 	target_node	= "systemsec-04"
 	clone		= "template-ubuntu"
 	vmid		= 102
+	agent		= 1
 
 	memory		= 4096
-	balloon		= 1
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"

@@ -13,4 +13,14 @@ pihole error from daemon failed bind to port 0.0.0.0:53 address already in use
  $ sudo systemctl stop systemd-resolved
 ```
 
+uggghhhhhh  
+add 1.1.1.1 to docker compose to make life not suck
+
+## Samba
+found an image on docker hub that seems legit  
+used suggested config
+
+need to change firewall rules on bsd
+also need to change nftables rules... euugghghghghgh
+
 

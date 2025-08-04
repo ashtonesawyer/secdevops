@@ -105,10 +105,33 @@ google.com.             0       IN      A       142.250.73.78
 ```
 
 ## Samba
-found an image on docker hub that seems legit  
-used suggested config
+To set up the Samba server I found an image on docker hub. I chose the image
+from dockurr because it seemed fairly legit. I used the docker config that's on
+docker hub. 
 
-need to change firewall rules on bsd
-also need to change nftables rules... euugghghghghgh
+In order to make it accessible, I needed to change the firewall rules on
+the proxmox host and the FreeBSD bastion. 
+
+```
+Proxmox (/etc/nftables.conf):
+	table ip nat {
+	    chain prerouting {
+		type nat hook prerouting priority -100; policy accept;
+		...
+		ip daddr 10.218.150.39 tcp dport 445 dnat to 172.20.0.102:445
+	    }
+	}
+
+FreeBSD (/etc/pf.conf):
+	rdr pass log on $ext_if inet proto tcp from any to port 445 -> $server port 445
+	pass out on $int_if proto tcp from any to $server port 445
+```
+
+Then I put a test file in the director that's shared with the samba container
+and tried accessing it from my local machine. It worked like a charm. 
+
+![samba login prompt](./img/samba-login.png)
+
+![test file in samba directory](./img/samba-folder.png)
 
 

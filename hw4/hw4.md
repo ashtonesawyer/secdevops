@@ -138,6 +138,10 @@ The process is much the same as above. There are a couple changes:
 - The ID will be 1001 instead of 1000
 - Create a new `freebsd.yaml` to replace `vendor.yaml
 
+After creating the template as above, I also added another NIC using the web 
+UI. Go to template-freebsd > Hardware > Add > Network Device and add a E1000
+on the internal network. I also changed net0 from virtio to e1000. 
+
 ```
  $ cat freebsd.yaml
 #cloud-config
@@ -147,10 +151,6 @@ runcmd:
     - sysrc qemu_guest_agent_enable="YES"
     - reboot
 ```
-
-After creating the template as above, I also added another NIC using the web 
-UI. Go to template-freebsd > Hardware > Add > Network Device and add a E1000
-on the internal network. I also changed net0 from virtio to e1000. 
 
 # Terraform (OpenTofu)
 I split my terraform script up into two files: one for the provider and one for
@@ -191,7 +191,10 @@ for writing the terraform script, and most all of the keywords are the same.
 
 This is the terraform for the FreeBSD bastion. The Ubuntu VMs are very similar.
 
-```
+It is worth noting that the keyword where it says `bastion` below must be
+unique to each VM that gets created.
+
+```tf
 resource "proxmox_vm_qemu" "bastion" {
 	name	 	= "bsd"
 	description	= "FreeBSD Bastion"
@@ -273,6 +276,18 @@ should now work.
  $ tofu plan
 ```
 
+FreeBSD is not great at running cloud init. In order to get it to run, you have
+to log on to the machine, install cloud-init, and add it to `rc.conf`. Then
+restart and cloud init will actually run as expected. 
 
-NOTE:  
-rm eth0 renaming from rc.conf after cloud init
+```
+ $ pkg install py311-cloud-init
+ $ sysrc cloudinit_enable="YES"
+ $ reboot
+```
+It's also worth noting that the cloud init process changes the name of `em0` to
+`eth0`. This can be fixed by removing the line in `rc.conf` that renames the 
+interface. 
+
+The Ubuntu VMs run cloud init just fine after being created. 
+

@@ -136,7 +136,17 @@ The process is much the same as above. There are a couple changes:
 - use the FreeBSD image in `resize` and `importdisk`
 - change the name to `template-freebsd` in `create`
 - The ID will be 1001 instead of 1000
-- Skip creating `/var/lib/vz/snippets/vendor.yaml`
+- Create a new `freebsd.yaml` to replace `vendor.yaml
+
+```
+ $ cat freebsd.yaml
+#cloud-config
+runcmd:
+    - pkg update
+    - pkg install -y qemu_guest_agent
+    - sysrc qemu_guest_agent_enable="YES"
+    - reboot
+```
 
 After creating the template as above, I also added another NIC using the web 
 UI. Go to template-freebsd > Hardware > Add > Network Device and add a E1000

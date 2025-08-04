@@ -157,6 +157,9 @@ I split my terraform script up into two files: one for the provider and one for
 the actual machines. 
 
 ## providers.tf
+I basically just copied this during class and haven't touched it since. It
+seems to work like a charm, so good enough. 
+
 ```tf
 terraform {
         required_version = ">= 0.15"
@@ -177,7 +180,70 @@ provider "proxmox" {
 ```
 
 ## main.tf
+Setting up the terraform script for each VM was a little frustrating.
+When cloning a template from the Proxmox UI all of the settings for the VM
+(cloudinit users, NICs, drives, etc.) are carried over. The tf `clone` keyword
+only clones the disk data, so all of the setup done on the template needs to be
+done explicitly within the script. 
+
+Fortunately, we can use the commands from setting up the templates as a guide
+for writing the terraform script, and most all of the keywords are the same. 
+
+This is the terraform for the FreeBSD bastion. The Ubuntu VMs are very similar.
+
 ```
+resource "proxmox_vm_qemu" "bastion" {
+	name	 	= "bsd"
+	description	= "FreeBSD Bastion"
+	target_node 	= "systemsec-04"
+	clone 		= "template-freebsd"
+	vmid		= 100
+	agent		= 1
+
+	memory 		= 4096
+	scsihw		= "virtio-scsi-pci"
+
+	os_type		= "cloud-init"
+	ipconfig0	= "ip=dhcp"
+	ciupgrade	= true
+	cicustom	= "vendor=local:snippets/freebsd.yaml"
+	ciuser		= "sawyeras"
+	cipassword	= "SHA512-passwd-hash"
+
+	cpu {
+		cores = 4
+	}
+	
+	network {
+		id = 0
+		model = "e1000"
+		bridge = "vnet"
+	}
+
+	network {
+		id = 1
+		model = "e1000"
+		bridge = "internal"
+	}
+
+	disk {
+		slot = "ide2"
+		type = "cloudinit"
+		storage = "local-lvm"
+	}
+
+	disk {
+		slot = "virtio0"
+		storage = "local-lvm"
+		size = "32G"
+	}
+	
+	serial {
+		id = 0
+		type = "socket"
+	}
+	
+}
 ```
 
 ## Running 

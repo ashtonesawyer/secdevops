@@ -291,3 +291,18 @@ interface.
 
 The Ubuntu VMs run cloud init just fine after being created. 
 
+# Ansible
+
+# Services
+Now that the VMs are created and running, it's time to set up some more
+services. 
+
+## Wireguard
+take config from img github repo  
+stuff didn't auto populate correctly, it seems  
+but I don't want to figure out how to fix it right this second
+
+## Wazuh
+This is confusing... what am I supposed to be doing? 
+
+## 

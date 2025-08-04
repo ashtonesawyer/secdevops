@@ -1,24 +1,62 @@
 # Docker Compose
-add self to docker group w/ `sudo usermod -aG docker $USER`  
-log out and back in to take effect
-
-## Pi-Hole
-Got most of the setting from https://github.com/pi-hole/docker-pi-hole and 
-changed them to what seemed mostly reasonable? Guessing here...
+One of the first things that I did was add myself to the `docker` group so that
+I wouldn't have to keep running `sudo`. 
 
 ```
-pihole error from daemon failed bind to port 0.0.0.0:53 address already in use
+ $ sudo usermod -aG docker $USER
+```
 
- $ sudo systemctl disable systemd-resolved.service
+Then log out and back in for the change to take effect. 
+
+## Pi-Hole
+I got started with the pihole. I got most of the settings from the [example 
+docker file](https://github.com/pi-hole/docker-pi-hole?tab=readme-ov-file#quick-start). 
+
+Initially when trying to start the container I got an error that the daemon 
+failed to bind to port `0.0.0.0:53` because it was already in use. 
+
+To get around this, I tried disabling the `resolved` service. 
+
+```
  $ sudo systemctl stop systemd-resolved
 ```
 
-uggghhhhhh  
-add 1.1.1.1 to docker compose to make life not suck
+This got rid of that error, but then nothing could resolve because the service
+was disabled... In order to get DNS to resolve for the container, I added the
+following block to the compose file:
+```
+dns:
+  - 127.0.0.1
+  - 1.1.1.1
+```
 
-actually ingore that...  
-follow the guide that logan sent in the discord  
-then change /etc/netplan/clou.... to be
+This worked and I was able to use the container, but it felt a little cheat-y 
+because I think it was just going through the pihole and straight to `1.1.1.1`.
+
+Then I mostly scrapped what I was doing and followed [this 
+guide](https://pimylifeup.com/pi-hole-docker/). 
+
+### The Guide
+I kept my original configuration file. 
+
+Then I edited `/etc/systemd/resolved.conf` and added `DNSStubListener=no`. 
+
+Then I removed `/etc/resolv.conf` and recreated it.
+
+```
+ $ sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+```
+
+Then restarted the service
+
+```
+ $ sudo systemctl restart systemd-resolved
+```
+
+This is where the guide ended. 
+
+To actually use the pihole as the default DNS server, I edited 
+`/etc/netplan/50-cloud-init.yaml` to read as follows:
 ```
 network:
   version: 2
@@ -32,8 +70,39 @@ network:
         addresses: [192.168.33.67]
 ```
 
-then try with `sudo netplan try` and keep with `sudo netplan apply`  
-can double check that it's using the right IP with `dig`
+You can temporarily try the plan and then apply it with
+```
+ $ sudo netplan try
+ $ sudo netplan apply
+```
+
+I checked what was being used as the server with `dig` and we can see that
+`192.168.33.67` (the IP of the Ubuntu machine) is used as the server, and since
+port 53 is passed through to the container, that means the pihole is being used.
+
+```
+ $ dig google.com
+
+; <<>> DiG 9.18.30-0ubuntu0.24.04.2-Ubuntu <<>> google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14838
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; EDE: 3 (Stale Answer)
+;; QUESTION SECTION:
+;google.com.                    IN      A
+
+;; ANSWER SECTION:
+google.com.             0       IN      A       142.250.73.78
+
+;; Query time: 1 msec
+;; SERVER: 192.168.33.67#53(192.168.33.67) (UDP)
+;; WHEN: Mon Aug 04 16:40:07 UTC 2025
+;; MSG SIZE  rcvd: 61
+```
 
 ## Samba
 found an image on docker hub that seems legit  

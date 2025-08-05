@@ -305,4 +305,14 @@ but I don't want to figure out how to fix it right this second
 ## Wazuh
 This is confusing... what am I supposed to be doing? 
 
-## 
+## Semgrep
+Chose this one because its fully open src and seemed like the setup was pretty
+straighforward  
+
+```
+ $ pip install semgrep
+ $ semgrep --config "p/default" # ran on current directory (?) will default rules
+...
+
+
+```

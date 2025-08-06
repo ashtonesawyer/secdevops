@@ -281,7 +281,7 @@ to log on to the machine, install cloud-init, and add it to `rc.conf`. Then
 restart and cloud init will actually run as expected. 
 
 ```
- $ pkg install py311-cloud-init
+ $ pkg install py311-cloud-init 
  $ sysrc cloudinit_enable="YES"
  $ reboot
 ```
@@ -304,6 +304,12 @@ needed to install community.general for sysrc module
 ```
  $ ansible-galaxy collection install community.general
 ```
+
+might need to change server ips on pf.conf since they're given dynamically
+	-> if can't ssh into nobles, check this first
+
+for some reason pkg installation doesn't work on the first ansible run but
+	works on the second. annoying, but oh well
 
 # Services
 Now that the VMs are created and running, it's time to set up some more

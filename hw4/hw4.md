@@ -292,6 +292,18 @@ interface.
 The Ubuntu VMs run cloud init just fine after being created. 
 
 # Ansible
+I installed ansible on the same system that I'm running opentofu from. In order
+for some of the modules to work, I needed to install ansible from pipx rather 
+than apt. 
+
+NOTES:
+decided to go for directory setup since there should be overlap btwn noble and bsd
+	so wanted to be able to reuse roles and such
+
+needed to install community.general for sysrc module
+```
+ $ ansible-galaxy collection install community.general
+```
 
 # Services
 Now that the VMs are created and running, it's time to set up some more

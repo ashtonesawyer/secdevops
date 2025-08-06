@@ -7,6 +7,7 @@ resource "proxmox_vm_qemu" "bastion" {
 	agent		= 1
 
 	memory 		= 4096
+	balloon		= 2024
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"
@@ -61,7 +62,8 @@ resource "proxmox_vm_qemu" "server0" {
 	vmid		= 101
 	agent		= 1
 
-	memory		= 4096
+	memory		= 8192
+	balloon		= 4096
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"
@@ -109,6 +111,7 @@ resource "proxmox_vm_qemu" "server1" {
 	agent		= 1
 
 	memory		= 4096
+	balloon		= 2024
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"

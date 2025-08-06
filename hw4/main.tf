@@ -15,6 +15,8 @@ resource "proxmox_vm_qemu" "bastion" {
 	cicustom	= "vendor=local:snippets/freebsd.yaml"
 	ciuser		= "sawyeras"
    cipassword = "PASSWD_HASH"
+	sshkeys		= "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDIqtuUWB+MxigJdtOsNdm35slHigjrmvInq3RLMxiuY ashto@DESKTOP-D9IQNRC"
+	
 
 	cpu {
 		cores = 4
@@ -68,6 +70,7 @@ resource "proxmox_vm_qemu" "server0" {
 	cicustom	= "vendor=local:snippets/vendor.yaml"
 	ciuser		= "sawyeras"
    cipassword = "PASSWD_HASH"
+	sshkeys		= "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDIqtuUWB+MxigJdtOsNdm35slHigjrmvInq3RLMxiuY ashto@DESKTOP-D9IQNRC"
 
 	cpu {
 		cores = 4
@@ -114,6 +117,7 @@ resource "proxmox_vm_qemu" "server1" {
 	cicustom	= "vendor=local:snippets/vendor.yaml"
 	ciuser		= "sawyeras"
    cipassword = "PASSWD_HASH"
+	sshkeys		= "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDIqtuUWB+MxigJdtOsNdm35slHigjrmvInq3RLMxiuY ashto@DESKTOP-D9IQNRC"
 
 	cpu {
 		cores = 4

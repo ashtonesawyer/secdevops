@@ -298,7 +298,7 @@ than apt.
 
 NOTES:
 decided to go for directory setup since there should be overlap btwn noble and bsd
-	so wanted to be able to reuse roles and such
+so wanted to be able to reuse roles and such
 
 needed to install community.general for sysrc module
 ```
@@ -306,10 +306,20 @@ needed to install community.general for sysrc module
 ```
 
 might need to change server ips on pf.conf since they're given dynamically
-	-> if can't ssh into nobles, check this first
+-> if can't ssh into nobles, check this first
 
 for some reason pkg installation doesn't work on the first ansible run but
-	works on the second. annoying, but oh well
+works on the second. annoying, but oh well
+
+difference between shell and command sucks... shell works how I want it to
+
+split site.yaml into two files because starting the firewall means that ansible
+doesn't actually complete task because ssh session gets messed up. so run 
+bastion.yaml first and then handle the two ubuntu vms
+
+pyenv just isnt happening, that can be set up after ansible
+
+colorls isn't installing dependencies properly? manual install and then it works
 
 # Services
 Now that the VMs are created and running, it's time to set up some more

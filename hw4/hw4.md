@@ -378,12 +378,49 @@ Now that the VMs are created and running, it's time to set up some more
 services. 
 
 ## Wireguard
-take config from img github repo  
-stuff didn't auto populate correctly, it seems  
-but I don't want to figure out how to fix it right this second
+guide: https://pimylifeup.com/wireguard-docker/
+
+```
+❯ docker run --rm -it ghcr.io/wg-easy/wg-easy wgpw 'super_secret_password'
+Unable to find image 'ghcr.io/wg-easy/wg-easy:latest' locally
+latest: Pulling from wg-easy/wg-easy
+fe07684b16b8: Pull complete
+65b9c193e6b7: Pull complete
+826f8ad948ff: Pull complete
+cb37e5b9a0a1: Pull complete
+e3fd0cd8e9b9: Pull complete
+93291203249b: Pull complete
+4a55f9fa0217: Pull complete
+4f4fb700ef54: Pull complete
+fde2be46c20a: Pull complete
+9d6d727c061f: Pull complete
+Digest: sha256:5f26407fd2ede54df76d63304ef184576a6c1bb73f934a58a11abdd852fab549
+Status: Downloaded newer image for ghcr.io/wg-easy/wg-easy:latest
+PASSWORD_HASH='$2a$12$FTITipwicouxuElVfH1bGO8LWTXVlEOXbZzjfE/Mz4shyUewCIhVy'
+```
+
+connect at systemsec-04.cs.pdx.edu:51821
+sign in with password
+add client
+
+able to access the web ui, but something obviously needs to change
+with the config in order to use the vpn as would be wanted. 
+moving on for now
+
 
 ## Wazuh
-This is confusing... what am I supposed to be doing? 
+dont need to increase `max_map_count` because it's already above the required 262,144
+```
+❯ sysctl vm.max_map_count
+vm.max_map_count = 1048576
+```
+
+clone docker images n such
+```
+$ git clone https://github.com/wazuh/wazuh-docker.git -b v4.12.0
+```
+
+changed pihole's https port to 8443 so that wazuh could have 443
 
 ## Semgrep
 Chose this one because its fully open src and seemed like the setup was pretty

@@ -104,6 +104,24 @@ google.com.             0       IN      A       142.250.73.78
 ;; MSG SIZE  rcvd: 61
 ```
 
+We can also tell that the pihole is being used with the web dashboard that it
+provides. 
+
+Here we can see that the dashboard is accessible, and that it's been fielding 
+queries. 
+
+![./img/pihole-dash.img](pihole dashboard)
+
+And if we query some sites with dig, we can see them show up in the "recent
+queries" section
+
+```
+ $ dig systemsec-04.cs.pdx.edu
+ $ dig cat.pdx.edu
+```
+
+![./img/pihole-queries](pihole recent queries data)
+
 ## Samba
 To set up the Samba server I found an image on docker hub. I chose the image
 from dockurr because it seemed fairly legit. I used the docker config that's on

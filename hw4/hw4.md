@@ -147,7 +147,7 @@ on the internal network. I also changed net0 from virtio to e1000.
 #cloud-config
 runcmd:
     - pkg update
-    - pkg install -y qemu_guest_agent
+    - pkg install -y qemu-guest-agent
     - sysrc qemu_guest_agent_enable="YES"
     - reboot
 ```
@@ -318,8 +318,60 @@ doesn't actually complete task because ssh session gets messed up. so run
 bastion.yaml first and then handle the two ubuntu vms
 
 pyenv just isnt happening, that can be set up after ansible
+very pleased with myself that dropping in a script, running it, removing the script
+works to set up pyenv stuff
 
 colorls isn't installing dependencies properly? manual install and then it works
+except I didn't have to do that today for some reason... fixed?
+
+cant find package asciinema, removing from list
+ditto autojump
+ditto bsdgames
+ditto chafa
+nvm -- need to do full upgrade to see them
+
+needed to separate common pkg install from other common tasks so that it
+could happen before some of the commands that noble servers need
+
+needed to add 
+'git config --global --add safe.directory /home/sawyeras/clones/bat-extras' 
+for installing bat-extras to work?
+
+for some reason bat-extras build was failing about git things
+```
+Verifying scripts...
+batgrep:option_context skipped.
+batgrep:output_with_color skipped.
+batgrep:output_without_color skipped.
+batgrep:output_without_separator skipped.
+batgrep:regular_file skipped.
+batgrep:respects_bat_style skipped.
+batgrep:sanity_rg_works skipped.
+batgrep:search_fixed skipped.
+batgrep:search_from_stdin skipped.
+batgrep:search_regex skipped.
+batgrep:symlink_file skipped.
+batpipe:batpipe_term_width failed.
+lib_dsl:parse_simple_argsfatal: detected dubious ownership in repository at '/home/sawyeras/clones/bat-extras'
+To add an exception for this directory, call:
+
+        git config --global --add safe.directory /home/sawyeras/clones/bat-extras
+One or more tests failed.
+Run './test.sh --failed' for more detailed information.
+```
+even after running the command that they suggest. So I added the `--no-verify` flag
+and it seems to be working just fine?
+
+not created ethers.txt... cant tell what it was for, and it was being a pain
+so I didn't feel like it
+
+I tried to do something cool where I could have a docker-compose.yaml auto
+generate based on what roles a host was given and a template, but it
+kept not quite working and I don't have enough time to figure out
+how to make it go. Would be cool for a larger project though
+
+finally got ansible to set up stuff from hw3. Not the prettiest, but it's getting
+the job done. 
 
 # Services
 Now that the VMs are created and running, it's time to set up some more

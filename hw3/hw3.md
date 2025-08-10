@@ -110,7 +110,7 @@ provides.
 Here we can see that the dashboard is accessible, and that it's been fielding 
 queries. 
 
-![./img/pihole-dash.img](pihole dashboard)
+![pihole dashboard](./img/pihole-dash.png)
 
 And if we query some sites with dig, we can see them show up in the "recent
 queries" section
@@ -120,7 +120,7 @@ queries" section
  $ dig cat.pdx.edu
 ```
 
-![./img/pihole-queries](pihole recent queries data)
+![.pihole recent queries data](./img/pihole-queries.png)
 
 ## Samba
 To set up the Samba server I found an image on docker hub. I chose the image

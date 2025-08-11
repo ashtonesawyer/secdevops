@@ -42,6 +42,8 @@ To ssh://systemsec-04.cs.pdx.edu:7022/sawyeras/test.git
 ```
 ![updated gitlab repo](./img/gitlab-push.png)
 
+changed root password because default gets removed after 24hrs? 
+
 ## bitwarden
 vaultwarden is easier says kevin
 

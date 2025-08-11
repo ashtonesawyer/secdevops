@@ -401,6 +401,41 @@ also have the `pyenv_script` and `zsh_path` variables. These make it so that
 certain tasks can be in the common role and still work even though the actual
 content is different between the OSes. 
 
+## Pre-ansible Config
+The way I currently have things set up, I can run ansible immediately after
+terraform finishes creating the VMs. There are a couple reasons for this:
+
+1. cloudinit doesn't work properly for my FreeBSD image
+
+For some reason the cloudinit image that I have doesn't actually have the
+cloudinit package. Because of this, I have to login to the VM, install
+`py311-cloud-init`, add it to `rc.conf`, and then reboot before cloudinit will
+actually run.
+
+2. Ansible needs python3 to run
+
+In order for ansible to connect to the VM and execute commands, the VMs need to
+have python already installed on them. The Ubuntu VMs have python. The FreeBSD
+machine does not. 
+
+3. I un-rename em0
+
+A part of the cloudinit config renames `em0` to `eth0`. I don't like this,
+so I remove that line and reboot. 
+
+All in all, this is the workflow before running ansible:
+
+```
+# login as root
+ $ pkg install -y py311-cloud-init python3 vim
+ $ sysrc cloudinit_enable="YES"
+ $ reboot
+
+# login as cloudinit user
+ $ sudo vim /etc/rc.conf
+ $ sudo reboot
+```
+
 ## Plays
 I originally only had one playbook, called `site.yaml`. I eventually split
 that up into `bastion.yaml` and `servers.yaml` because when the play for 
@@ -458,14 +493,19 @@ The reason that I can use a single module to install
 packages on both FreeBSD and Ubuntu is because the `package` module does its 
 best to detect the operating system and choose the correct package manager. On
 Ubuntu it redirects to the built-in `apt` module, and on FreeBSD it redirects 
-to `community.general.pkgng`. The `packages` variable used is a list found in 
-`group_vars/all.yaml`. 
+to `community.general.pkgng`. 
 
 ```yaml
 - name: Install Common Packages
   become: true
   package:
     name: "{{ packages }}"
+    state: present
+
+- name: Install OS Packages
+  become: true
+  package:
+    name: "{{ os_pkgs }}"
     state: present
 
 - name: Create Directories
@@ -478,13 +518,81 @@ to `community.general.pkgng`. The `packages` variable used is a list found in
     - "{{ ansible_env.HOME }}/clones"
 ```
 
+### bsd
+This role configures the networking in `rc.conf`, dnsmasq, and Suricata. The 
+way that I add SMBGhost Suricata rules to `suricata.rules` is with the 
+`lineinfile` module, and I don't know if that's the best way to do it, but it
+seems to work. 
+
+Originally as a part of editing `rc.conf` I tried to remove the line that 
+cloudinit adds that changed the name of `em0`. I was able to remove the line,
+but I wasn't able to reboot reliably, which is why it's something I do manually
+before running. 
+
+For some reason, installing the FreeBSD specific packages doesn't work on the
+first try. `lolcat` always throws an error and ansible stops executing. But it
+always works on the second run (and by works I mean doesn't throw an error. 
+`lolcat` still doesn't successfully install). 
+
+### dev-env
+This roles is all about setting up the user environment. It clones a bunch of 
+git repos, sets up the python environment, configures git, and changes the 
+user's default shell to zsh.
+
+This is the role where things start to get a little hacky. While it's easy to
+change a `git clone` command into something for the git module to use, there
+are some things, like curl-ing a script and piping it straight into bash, 
+that only really happen as a bash command. There was already so much that I
+was trying to change, I decided to let the plays stay a little rough around the
+edges. 
+
+```
+- name: Setup .zshrc
+  shell: curl http://web.cecs.pdx.edu/~dmcgrath/setup_freebsd.tar.bz2 | tar xjvf - -C ~/
+```
+
+In doing this, though, I learned a very annoying lesson about the difference
+between the `command` and `shell` modules. The shell module does what you 
+expect it would. It runs an arbitrary shell command exactly as you typed it. 
+The command module is a demon that laughs in your face as you tear your hair
+out trying to figure out what could possibly be wrong.
+
+The part that I am absolutely the most proud of is how I set up the pyenv 
+environment. I originally tried to find a module, but I didn't see one quickly. 
+Then I tried to run a series of shell commands, but they didn't take. I thought
+for a long time that I would just have to come in at the end and install it 
+myself. But then I decided to try if a shell script would execute properly, and
+it worked. 
+
+What I have ansible do is drop in a script from the files directory, run it 
+(conditionally -- it only runs if the path that pyenv creates isn't valid), and
+then remove the script from the system. It's possible that there's a better way
+to do this, but I spent many hours banging my head against a wall and am very
+pleased with how this turned out. 
+
+```
+...
+
+- name: Create pyenv script
+  copy:
+    src: "{{ pyenv_script }}"
+    dest: "{{ ansible_env.HOME }}/setup.sh"
+    mode: 0775
+
+- name: Run pyenv script
+  shell:
+    cmd: ./setup.sh
+    creates: /home/sawyeras/.pyenv/shims/python
+
+- name: Remove pyenv script
+  file:
+    path: "{{ ansible_env.HOME }}/setup.sh"
+    state: absent
+
+...
+```
+
 NOTES:
-might need to change server ips on pf.conf since they're given dynamically
--> if can't ssh into nobles, check this first
-
-for some reason pkg installation doesn't work on the first ansible run but
-works on the second. annoying, but oh well
-
 difference between shell and command sucks... shell works how I want it to
 
 pyenv just isnt happening, that can be set up after ansible

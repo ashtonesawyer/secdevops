@@ -821,3 +821,18 @@ Ran 52 rules on 47 files: 0 findings.
    See https://semgrep.dev/docs/reporting-false-negatives/
 
 ```
+
+## GVM
+Can't load any scan configs
+
+```
+❯ docker logs greenbone-community-edition-ospd-openvas-1
+OSPD[6] 2025-08-11 16:19:11,525: INFO: (ospd.main) Starting OSPd OpenVAS version 22.9.0.
+OSPD[6] 2025-08-11 16:19:21,612: INFO: (ospd_openvas.daemon) Loading VTs. Scans will be [requested|queued] until VTs are loaded. This may take a few minutes, please wait...
+OSPD[6] 2025-08-11 16:21:30,129: INFO: (ospd_openvas.daemon) Finished loading VTs. The VT cache has been updated from version 0 to 202508110659.
+OSPD[6] 2025-08-11 16:31:24,211: INFO: (ospd_openvas.daemon) Loading VTs. Scans will be [requested|queued] until VTs are loaded. This may take a few minutes, please wait...
+OSPD[6] 2025-08-11 16:31:45,600: ERROR: (ospd_openvas.openvas) OpenVAS Scanner failed to load VTs. Command '['openvas', '--update-vt-info']' returned non-zero exit status 1.
+OSPD[6] 2025-08-11 16:31:45,600: ERROR: (ospd_openvas.daemon) Updating VTs failed.
+```
+
+But able to see the console and add some stuff and things

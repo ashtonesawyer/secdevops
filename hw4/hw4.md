@@ -590,13 +590,13 @@ pleased with how this turned out.
 
 ```
 
-## services
+### services
 This role activates the services that are set up eariler. It starts dnsmasq,
 moves the ssh port to 8022 and restarts the service, and finally enables
 the firewall rules. As mentioned above, this run doesn't gracefully finish 
 execution. But it all works. 
 
-## upgrade
+### upgrade
 This role is to do a full upgrade on the Ubuntu VMs. The full upgrade is needed
 to install many of the packages that are needed. In an ideal world this would
 be a part of the ubuntu role, but because of the timing it got pulled out
@@ -610,7 +610,7 @@ into it's own role.
     upgrade: "full"
 ```
 
-## ubuntu
+### ubuntu
 This role mostly just handles installing some of the environment tools by 
 cloning git repos because they can't be installed with `apt` (whereas they 
 could be installed with `pkg`). 
@@ -644,7 +644,7 @@ nerd-fonts because I didn't want to deal with the shallow checkout stuff, which
 seemed like it would need multiple tasks to handle rather than a single git 
 command. 
 
-## noble[01]
+### noble[01]
 I originally had plans to use a template that would allow me to have each
 service as its own role, and then another role would compile them into a single
 arbitrary `docker-compose.yaml`. It was very close to working, but I couldn't 

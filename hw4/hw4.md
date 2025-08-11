@@ -422,14 +422,124 @@ $ git clone https://github.com/wazuh/wazuh-docker.git -b v4.12.0
 
 changed pihole's https port to 8443 so that wazuh could have 443
 
+able to access dashboard, so that's good
+
+installed agent on bsd (`pkg install wazuh-agent`)
+more install info given at the end of pkg install
+```
+Wazuh Agent was installed
+
+1) Copy /etc/locatime to /var/ossec/etc directory
+
+   # cp /etc/localtime /var/ossec/etc
+
+2) You must edit /var/ossec/etc/ossec.conf.sample for your setup and rename/copy
+   it to ossec.conf
+
+   Take a look wazuh configuration at the following url:
+
+   https://documentation.wazuh.com/current/user-manual/index.html
+
+3) Move /var/ossec/etc/client.keys.sample to /var/ossec/etc/client.keys. This
+   file is used to store agent credentials
+
+   # mv /var/ossec/etc/client.keys.sample /var/ossec/etc/client.keys
+
+4) You can find additional useful files installed at
+
+  # /var/ossec/packages_files/agent_installation_scripts
+
+5) FreeBSD SCA files are installed by default to the following directory:
+
+   # /var/ossec/packages_files/agent_installation_scripts/sca/freebsd
+
+   For more information about FreeBSD SCA updates take a look at:
+
+   https://github.com/alonsobsd/wazuh-freebsd
+
+6) Add Wazuh agent to /etc/rc.conf
+
+  # sysrc wazuh_agent_enable="YES"
+
+  or
+
+  # service wazuh-agent enable
+
+7) Start Wazuh agent
+
+  # service wazuh-agent start
+
+8) Enjoy it ;)
+```
+
+no `/etc/localtime` found -- skipping
+change IP to noble0 IP -- only change I think required for conf file?
+both keys files are empty -- skipping
+added to rc.conf and started -- auto detected by manager
+
+I cannot get the agent to connect to the manager. I've tried generating the 
+keys with the root of trust, I tried using the build in tool but it said that
+that cert was bad. I tried just telling it to use a password instead, but
+it didn't update in the docker container. It's just not working. 
+
 ## Semgrep
-Chose this one because its fully open src and seemed like the setup was pretty
-straighforward  
+I chose this SAST tool because it's fully open source and the setup was very
+straightforward. I just installed it using `pip`.
+
+I tried running it against a few things, including two of the larger projects
+I've worked on. It didn't find any issues. I'm assuming this is because over
+half of the rules are unavailable in the community edition. Then I decided to 
+just run it against my entire home directory. 
 
 ```
  $ pip install semgrep
- $ semgrep --config "p/default" # ran on current directory (?) will default rules
-...
+ $ semgrep --config "p/default"
 
+┌──── ○○○ ────┐
+│ Semgrep CLI │
+└─────────────┘
+
+Scanning 47 files (only git-tracked) with 1062 Code rules:
+
+  CODE RULES
+
+  Language      Rules   Files          Origin      Rules
+ ─────────────────────────────        ───────────────────
+  <multilang>      48      47          Community    1062
+  json              4       7
+
+
+  SUPPLY CHAIN RULES
+
+  💎 Sign in with `semgrep login` and run
+     `semgrep ci` to find dependency vulnerabilities and
+     advanced cross-file findings.
+
+
+  PROGRESS
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00                                          
+
+
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 0 (0 blocking)
+ • Rules run: 52
+ • Targets scanned: 47
+ • Parsed lines: ~100.0%
+ • Scan skipped:
+   ◦ Files larger than  files 1.0 MB: 1
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 52 rules on 47 files: 0 findings.
+💎 Missed out on 1390 pro rules since you aren't logged in!
+⚡ Supercharge Semgrep OSS when you create a free account at https://sg.run/rules.
+(need more rules? `semgrep login` for additional free Semgrep Registry rules)
+
+
+✨ If Semgrep missed a finding, please send us feedback to let us know!
+   See https://semgrep.dev/docs/reporting-false-negatives/
 
 ```

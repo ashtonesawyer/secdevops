@@ -204,6 +204,7 @@ resource "proxmox_vm_qemu" "bastion" {
 	agent		= 1
 
 	memory 		= 4096
+	balloon         = 2024
 	scsihw		= "virtio-scsi-pci"
 
 	os_type		= "cloud-init"
@@ -249,6 +250,8 @@ resource "proxmox_vm_qemu" "bastion" {
 }
 ```
 
+One of the Ubuntu VMs has up to 8GB of memory, and the other has up to 4GB. 
+
 ## Running 
 ```
  $ tofu init
@@ -292,19 +295,190 @@ interface.
 The Ubuntu VMs run cloud init just fine after being created. 
 
 # Ansible
-I installed ansible on the same system that I'm running opentofu from. In order
+I installed ansible on the same system that I'm running OpenTofu from. In order
 for some of the modules to work, I needed to install ansible from pipx rather 
 than apt. 
 
-NOTES:
-decided to go for directory setup since there should be overlap btwn noble and bsd
-so wanted to be able to reuse roles and such
+I only installed the `community.general` collection because it had a lot of the
+FreeBSD specific modules, such as sysrc. 
 
-needed to install community.general for sysrc module
 ```
  $ ansible-galaxy collection install community.general
 ```
 
+## Structure
+I decided to do a role based structure since it would allow me to easily share
+the tasks that are common between the bastion and the Ubunutu VMs. 
+
+This is the structure of my ansible directory:
+
+```
+ansible
+├── files
+│   ├── bsd-pyenv.sh
+│   ├── noble0-compose.yaml
+│   ├── pf.conf
+│   ├── suricata.yaml
+│   └── ubuntu-pyenv.sh
+├── group_vars
+│   ├── all.yaml
+│   ├── freebsd.yaml
+│   └── noble.yaml
+├── roles
+│   ├── bsd
+│   │   └── tasks
+│   │       └── main.yaml
+│   ├── dev-env
+│   │   └── tasks
+│   │       └── main.yaml
+│   ├── noble0
+│   │   └── tasks
+│   │       └── main.yaml
+│   ├── noble1
+│   │   └── tasks
+│   │       └── main.yaml
+│   ├── pkgs
+│   │   └── tasks
+│   │       └── main.yaml
+│   ├── services
+│   │   └── tasks
+│   │       └── main.yaml
+│   ├── ubuntu
+│   │   └── tasks
+│   │       └── main.yaml
+│   └── upgrade
+│       └── tasks
+│           └── main.yaml
+├── bastion.yaml
+├── hosts
+├── servers.yaml
+└── services.yaml
+```
+
+## Inventory
+Since I'm running ansible from my local machine, I have ansible connect to
+the VMs through ssh, which is configured in my `hosts` inventory file. 
+
+Because of the way we have port forwarding set up for the machines, 
+they all have the same host IP and only differ in their ports. I do have
+to have `bsd` and `noble0` with the same port, though, since ansible needs to 
+connect to the bastion *before* the ssh port is changed to 8022. This does mean
+that the `known_hosts` complains, but removing it is easy enough. 
+
+```ini
+[noble]
+noble0 ansible_port=22
+noble1 ansible_port=22222
+
+[freebsd]
+bsd ansible_port=22 ansible_python_interpreter=/usr/local/bin/python3
+
+[all:vars]
+ansible_host=systemsec-04.cs.pdx.edu
+ansible_user=sawyeras
+ansible_ssh_private_key_file=/home/sawyeras/.ssh/windows_key
+
+[noble:vars]
+ansible_python_interpreter=/usr/bin/python3
+```
+
+## Files Directory
+The files directory is for files that are to be copied to the target system.
+There were some things that were just easier to plop in than to try to edit
+or build on their own. This does come with a bit of a downside for `pf.conf` in
+particular because the IP addresses of `$server` and `$server1` need to change
+based on what cloudinit assigns them, but given that they don't have IP 
+addresses until after the bastion is at least partially set up, I still prefer
+to just drop the file in.
+
+## group\_vars
+I only have a couple of variables set up. `all.yaml` just contains the 
+`packages` variable, which is a list of the packages that both FreeBSD and
+Ubuntu use. `freebsd.yaml` and `noble.yaml` are only slightly more interesting. 
+
+Both have a list of packages that are to be installed based on the OS, but they
+also have the `pyenv_script` and `zsh_path` variables. These make it so that
+certain tasks can be in the common role and still work even though the actual
+content is different between the OSes. 
+
+## Plays
+I originally only had one playbook, called `site.yaml`. I eventually split
+that up into `bastion.yaml` and `servers.yaml` because when the play for 
+the bastion finishes, the act of loading the firewall rules disrupts ansible's
+connectivity, so it doesn't finish gracefully. By splitting them up, I can 
+configure the bastion, Ctl-C to stop ansible once the firewall rules are 
+enabled, and then configure the Ubuntu machines. 
+
+I have `services.yaml` (for setting up the docker services) separate from 
+`servers.yaml` just because it made testing easier. 
+
+```yaml
+# --- bastion.yaml --- 
+- name: Configure FreeBSD Bastion
+  hosts: freebsd
+  roles:
+    - role: pkgs
+    - role: bsd
+    - role: dev-env
+    - role: services
+
+# --- servers.yaml --- 
+- name: Configure Ubuntu Systems
+  hosts: noble
+  roles:
+    - role: upgrade
+    - role: pkgs
+    - role: ubuntu
+    - role: dev-env
+
+# --- services.yaml --- 
+- name: Docker -- noble0
+  hosts: noble0
+  roles:
+    - noble0
+
+- name: Docker -- noble1
+  hosts: noble1
+  roles:
+    - noble1
+```
+
+## Roles
+Originally I only had three roles: common, bsd, and ubuntu. I ended up needing
+to split common into pkgs and dev-env because of the order in which things 
+needed to be done. I also needed to take some of the ubuntu roles tasks and
+move them into the upgrade role because of the order of operations. 
+
+### pkgs 
+This role is just to install the packages that are common between the two 
+operating systems and to create the `clones/` and `bin/` directories that
+are used later. 
+
+The reason that I can use a single module to install
+packages on both FreeBSD and Ubuntu is because the `package` module does its 
+best to detect the operating system and choose the correct package manager. On
+Ubuntu it redirects to the built-in `apt` module, and on FreeBSD it redirects 
+to `community.general.pkgng`. The `packages` variable used is a list found in 
+`group_vars/all.yaml`. 
+
+```yaml
+- name: Install Common Packages
+  become: true
+  package:
+    name: "{{ packages }}"
+    state: present
+
+- name: Create Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0775'
+  loop:
+    - "{{ ansible_env.HOME }}/bin"
+    - "{{ ansible_env.HOME }}/clones"
+```
+
+NOTES:
 might need to change server ips on pf.conf since they're given dynamically
 -> if can't ssh into nobles, check this first
 
@@ -312,10 +486,6 @@ for some reason pkg installation doesn't work on the first ansible run but
 works on the second. annoying, but oh well
 
 difference between shell and command sucks... shell works how I want it to
-
-split site.yaml into two files because starting the firewall means that ansible
-doesn't actually complete task because ssh session gets messed up. so run 
-bastion.yaml first and then handle the two ubuntu vms
 
 pyenv just isnt happening, that can be set up after ansible
 very pleased with myself that dropping in a script, running it, removing the script

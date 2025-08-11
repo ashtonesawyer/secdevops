@@ -546,7 +546,7 @@ that only really happen as a bash command. There was already so much that I
 was trying to change, I decided to let the plays stay a little rough around the
 edges. 
 
-```
+```yaml
 - name: Setup .zshrc
   shell: curl http://web.cecs.pdx.edu/~dmcgrath/setup_freebsd.tar.bz2 | tar xjvf - -C ~/
 ```
@@ -570,8 +570,7 @@ then remove the script from the system. It's possible that there's a better way
 to do this, but I spent many hours banging my head against a wall and am very
 pleased with how this turned out. 
 
-```
-...
+```yaml
 
 - name: Create pyenv script
   copy:
@@ -589,7 +588,6 @@ pleased with how this turned out.
     path: "{{ ansible_env.HOME }}/setup.sh"
     state: absent
 
-...
 ```
 
 ## services
@@ -604,7 +602,7 @@ to install many of the packages that are needed. In an ideal world this would
 be a part of the ubuntu role, but because of the timing it got pulled out
 into it's own role. 
 
-```
+```yaml
 - name: Full Upgrade
   become: true
   apt:
@@ -620,7 +618,7 @@ could be installed with `pkg`).
 The tasks below are of the general form found in this file of "clone then
 build". 
 
-```
+```yaml
 - name: Clone fastfetch
   git:
     repo: https://github.com/fastfetch-cli/fastfetch.git

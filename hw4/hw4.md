@@ -592,64 +592,69 @@ pleased with how this turned out.
 ...
 ```
 
-NOTES:
-difference between shell and command sucks... shell works how I want it to
+## services
+This role activates the services that are set up eariler. It starts dnsmasq,
+moves the ssh port to 8022 and restarts the service, and finally enables
+the firewall rules. As mentioned above, this run doesn't gracefully finish 
+execution. But it all works. 
 
-pyenv just isnt happening, that can be set up after ansible
-very pleased with myself that dropping in a script, running it, removing the script
-works to set up pyenv stuff
+## upgrade
+This role is to do a full upgrade on the Ubuntu VMs. The full upgrade is needed
+to install many of the packages that are needed. In an ideal world this would
+be a part of the ubuntu role, but because of the timing it got pulled out
+into it's own role. 
 
-colorls isn't installing dependencies properly? manual install and then it works
-except I didn't have to do that today for some reason... fixed?
-
-cant find package asciinema, removing from list
-ditto autojump
-ditto bsdgames
-ditto chafa
-nvm -- need to do full upgrade to see them
-
-needed to separate common pkg install from other common tasks so that it
-could happen before some of the commands that noble servers need
-
-needed to add 
-'git config --global --add safe.directory /home/sawyeras/clones/bat-extras' 
-for installing bat-extras to work?
-
-for some reason bat-extras build was failing about git things
 ```
-Verifying scripts...
-batgrep:option_context skipped.
-batgrep:output_with_color skipped.
-batgrep:output_without_color skipped.
-batgrep:output_without_separator skipped.
-batgrep:regular_file skipped.
-batgrep:respects_bat_style skipped.
-batgrep:sanity_rg_works skipped.
-batgrep:search_fixed skipped.
-batgrep:search_from_stdin skipped.
-batgrep:search_regex skipped.
-batgrep:symlink_file skipped.
-batpipe:batpipe_term_width failed.
-lib_dsl:parse_simple_argsfatal: detected dubious ownership in repository at '/home/sawyeras/clones/bat-extras'
-To add an exception for this directory, call:
-
-        git config --global --add safe.directory /home/sawyeras/clones/bat-extras
-One or more tests failed.
-Run './test.sh --failed' for more detailed information.
+- name: Full Upgrade
+  become: true
+  apt:
+    update_cache: yes
+    upgrade: "full"
 ```
-even after running the command that they suggest. So I added the `--no-verify` flag
-and it seems to be working just fine?
 
-not created ethers.txt... cant tell what it was for, and it was being a pain
-so I didn't feel like it
+## ubuntu
+This role mostly just handles installing some of the environment tools by 
+cloning git repos because they can't be installed with `apt` (whereas they 
+could be installed with `pkg`). 
 
-I tried to do something cool where I could have a docker-compose.yaml auto
-generate based on what roles a host was given and a template, but it
-kept not quite working and I don't have enough time to figure out
-how to make it go. Would be cool for a larger project though
+The tasks below are of the general form found in this file of "clone then
+build". 
 
-finally got ansible to set up stuff from hw3. Not the prettiest, but it's getting
-the job done. 
+```
+- name: Clone fastfetch
+  git:
+    repo: https://github.com/fastfetch-cli/fastfetch.git
+    dest: "{{ ansible_env.HOME }}/clones/fastfetch"
+
+- name: Make fastfetch build dir
+  shell:
+    chdir: "{{ ansible_env.HOME }}/clones/fastfetch"
+    cmd: mkdir -p build
+
+- name: Build fastfetch
+  shell:
+    chdir: "{{ ansible_env.HOME }}/clones/fastfetch/build"
+    cmd: "{{ item }}"
+  loop:
+    - cmake ..
+    - cmake --build . --target fastfetch --target flashfetch
+    - sudo make install
+```
+
+I also used the `shell` module instead of the `git` module for cloning 
+nerd-fonts because I didn't want to deal with the shallow checkout stuff, which
+seemed like it would need multiple tasks to handle rather than a single git 
+command. 
+
+## noble[01]
+I originally had plans to use a template that would allow me to have each
+service as its own role, and then another role would compile them into a single
+arbitrary `docker-compose.yaml`. It was very close to working, but I couldn't 
+quite get the template to format it correctly.
+
+Instead, I have premade docker compose files that I copy onto the target system
+and then start and maybe do some system configuration if needed. The noble 
+roles just determine which file gets dropped in. 
 
 # Services
 Now that the VMs are created and running, it's time to set up some more

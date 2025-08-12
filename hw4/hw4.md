@@ -660,35 +660,41 @@ services.
 
 ## Wireguard
 To start, I grabbed the docker compose file from wg-easy's github. 
-guide: https://pimylifeup.com/wireguard-docker/
 
 ```
-❯ docker run --rm -it ghcr.io/wg-easy/wg-easy wgpw 'super_secret_password'
-Unable to find image 'ghcr.io/wg-easy/wg-easy:latest' locally
-latest: Pulling from wg-easy/wg-easy
-fe07684b16b8: Pull complete
-65b9c193e6b7: Pull complete
-826f8ad948ff: Pull complete
-cb37e5b9a0a1: Pull complete
-e3fd0cd8e9b9: Pull complete
-93291203249b: Pull complete
-4a55f9fa0217: Pull complete
-4f4fb700ef54: Pull complete
-fde2be46c20a: Pull complete
-9d6d727c061f: Pull complete
-Digest: sha256:5f26407fd2ede54df76d63304ef184576a6c1bb73f934a58a11abdd852fab549
-Status: Downloaded newer image for ghcr.io/wg-easy/wg-easy:latest
-PASSWORD_HASH='$2a$12$FTITipwicouxuElVfH1bGO8LWTXVlEOXbZzjfE/Mz4shyUewCIhVy'
+ $ curl -o docker-compose.yaml https://raw.githubusercontent.com/wg-easy/wg-easy/master/docker-compose.yml
 ```
 
-connect at systemsec-04.cs.pdx.edu:51821
-sign in with password
-add client
+I changed it so that `INSECURE=true` so that I could login without https. 
 
-able to access the web ui, but something obviously needs to change
-with the config in order to use the vpn as would be wanted. 
-moving on for now
+As soon as the container is up, I can connect to the dashboard. This leads to 
+a form for setting up the admin account and the domain that clients should
+connect to.
 
+![wg-easy setup page](./img/wg-setup.png)
+
+![wg-easy domain set page](./img/wg-domain.png)
+
+After going through the setup, I can log in with the credentials that I just
+created. Then I can add clients and do a little more config with the admin 
+console. In the admin console, I went to Interface > Change CIDR and changed
+the CIDR address to 192.168.33.69/26 which fits within the subnet given to 
+the ubuntu VMs. 
+
+Then I can create a client, download the config file, and upload it to the 
+wireguard client on my local machine. 
+
+![wg-easy client list](./img/wg-client.png)
+
+
+![connected to wireguard](./img/wg-connect.png)
+
+
+I can see that I'm connected to the wireguard client, but I don't actually have
+any internet access. I'm not sure how to fix this. I did lots of googling, but 
+didn't come across anything useful. It was mentioned in class that there needs
+to be some kind of bridge between the wireguard network and the VM subnet, but
+I don't know how to set this up correctly. 
 
 ## Wazuh
 The first thing that the docker install instructions from Wazuh tell you to do

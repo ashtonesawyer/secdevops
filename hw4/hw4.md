@@ -659,6 +659,7 @@ Now that the VMs are created and running, it's time to set up some more
 services. 
 
 ## Wireguard
+To start, I grabbed the docker compose file from wg-easy's github. 
 guide: https://pimylifeup.com/wireguard-docker/
 
 ```
@@ -690,24 +691,37 @@ moving on for now
 
 
 ## Wazuh
-dont need to increase `max_map_count` because it's already above the required 262,144
+The first thing that the docker install instructions from Wazuh tell you to do
+it increase the `max_map_count` on the host because Wazuh needs there to be a 
+minimum of 262,144. I didn't have to do this because the default on the VM was
+already above the minimum. 
+
 ```
-❯ sysctl vm.max_map_count
+ $ sysctl vm.max_map_count
 vm.max_map_count = 1048576
 ```
 
-clone docker images n such
+I cloned the Wazuh repo, which has premade docker compose files.
+
 ```
 $ git clone https://github.com/wazuh/wazuh-docker.git -b v4.12.0
 ```
 
-changed pihole's https port to 8443 so that wazuh could have 443
+I decided to use the single node deployment because I don't need high 
+availability and I don't think my VM has the resources to handle multiple
+nodes. 
 
-able to access dashboard, so that's good
+Without changing anything I am able to access the dashboard and login.
 
-installed agent on bsd (`pkg install wazuh-agent`)
-more install info given at the end of pkg install
+![wazuh dashboard login](./img/wazuh-login.png)
+
+Then, I installed a wazuh agent on the FreeBSD bastion. 
+
 ```
+ $ sudo pkg install wazuh-agent
+
+...
+
 Wazuh Agent was installed
 
 1) Copy /etc/locatime to /var/ossec/etc directory
@@ -753,15 +767,114 @@ Wazuh Agent was installed
 8) Enjoy it ;)
 ```
 
-no `/etc/localtime` found -- skipping
-change IP to noble0 IP -- only change I think required for conf file?
-both keys files are empty -- skipping
-added to rc.conf and started -- auto detected by manager
+I edited `/var/ossec/etc/ossec.conf` to define the IP address of the wazuh 
+manager and change the protocol from UDP to TCP. I added the agent to `rc.conf`
+and started it. 
 
-I cannot get the agent to connect to the manager. I've tried generating the 
-keys with the root of trust, I tried using the build in tool but it said that
-that cert was bad. I tried just telling it to use a password instead, but
-it didn't update in the docker container. It's just not working. 
+```
+  <client>
+    <server>
+      <address>192.168.33.105</address>
+      <port>1514</port>
+      <protocol>tcp</protocol>
+    </server>
+    <config-profile>freebsd, freebsd14</config-profile>
+    <crypto_method>aes</crypto_method>
+  </client>
+```
+
+I spent many, many hours trying to figure out how to connect the agent to the
+manager. I tried generating SSL certificates and keys using the rootCA.pem file
+given by wazuh. I tried editing `ossec.conf` so that the agent would try to
+automatically enroll when it first connected to the manager. I tried to 
+generate a key on the manager as shown below and then add it to
+`/var/ossec/etc/client.keys` on FreeBSD. I even tried to change authentication
+on the manager to password based to see if I could get that working better. 
+Nothing was working and I was ready to call it quits. Shoutout to Harrison for 
+figuring out how to actually apply the key and sharing. 
+
+```
+ noble$ docker exec -it single-node-wazuh.manager-1 /var/ossec/bin/manage_agents
+
+****************************************
+* Wazuh v4.12.0 Agent manager.         *
+* The following options are available: *
+****************************************
+   (A)dd an agent (A).
+   (E)xtract key for an agent (E).
+   (L)ist already added agents (L).
+   (R)emove an agent (R).
+   (Q)uit.
+Choose your action: A,E,L,R or Q: A
+
+- Adding a new agent (use '\q' to return to the main menu).
+  Please provide the following:
+   * A name for the new agent: bsd_agent
+   * The IP Address of the new agent: 192.168.33.1
+Confirm adding it?(y/n): y
+Agent added with ID 002.
+
+
+****************************************
+* Wazuh v4.12.0 Agent manager.         *
+* The following options are available: *
+****************************************
+   (A)dd an agent (A).
+   (E)xtract key for an agent (E).
+   (L)ist already added agents (L).
+   (R)emove an agent (R).
+   (Q)uit.
+Choose your action: A,E,L,R or Q: E
+
+Available agents:
+   ID: 002, Name: bsd_agent, IP: 192.168.33.1
+Provide the ID of the agent to extract the key (or '\q' to quit): 002
+
+Agent key information for '002' is:
+<key>
+
+ bsd$ sudo service wazuh-agent start
+Starting Wazuh Agent: 2025/08/12 03:29:44 wazuh-syscheckd: WARNING: The check_unixaudit option is deprecated in favor of the SCA module.
+success
+
+ bsd$ sudo /var/ossec/bin/manage_agents -i "<key>"
+
+Agent information:
+   ID:002
+   Name:bsd_agent
+   IP Address:192.168.33.1
+
+Confirm adding it?(y/n): y
+Added.
+
+ bsd$ sudo service wazuh-agent restart
+Stopping Wazuh Agent: success
+
+Starting Wazuh Agent: 2025/08/12 03:31:26 wazuh-syscheckd: WARNING: The check_unixaudit option is deprecated in favor of the SCA module.
+succes
+```
+
+After this I was able to see the agent in the dashboard, but there weren't any
+scans running. 
+
+![wazuh agent page](./img/wazuh-agent.png)
+
+I copied a file from 
+`/var/ossec/packages_files/agent_installation_scripts/sca/freebsd` to 
+`/var/ossec/ruleset/sca` and added the below to `ossec.conf`. 
+
+
+```
+  <sca>
+    <enabled>yes</enabled>
+    <scan_on_start>yes</scan_on_start>
+  </sca>
+```
+
+When I restarted the agent, I could see the results of the scan in the 
+dashboard.
+
+![wazuh scan results](./img/wazuh-scan.png)
 
 ## Semgrep
 I chose this SAST tool because it's fully open source and the setup was very

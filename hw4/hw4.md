@@ -888,8 +888,7 @@ straightforward. I just installed it using `pip`.
 
 I tried running it against a few things, including two of the larger projects
 I've worked on. It didn't find any issues. I'm assuming this is because over
-half of the rules are unavailable in the community edition. Then I decided to 
-just run it against my entire home directory. 
+half of the rules are unavailable in the community edition.
 
 ```
  $ pip install semgrep

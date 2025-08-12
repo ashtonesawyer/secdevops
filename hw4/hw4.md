@@ -944,6 +944,28 @@ Ran 52 rules on 47 files: 0 findings.
 ```
 
 ## GVM
+I started by following the directions for the fully containerized setup. 
+
+All of the dependencies were already installed so I ignored that step. 
+
+When I tried to set it up exactly how it says to in the documentation 
+(uninstalling docker.io package, etc) when I try to connect I get this error:
+
+![gvm login error](./img/gvm-error.png)
+
+```
+ $ docker logs greenbone-community-edition-gsa-1
+starting gsad
+gsad main:MESSAGE:2025-08-12 18h48.33 utc:12: Starting GSAD version 24.4.0
+gsad gmp:WARNING:2025-08-12 18h49.23 utc:12: Failed to connect to server at /run/gvmd/gvmd.sock: No such file or directory
+gsad gmp:WARNING:2025-08-12 18h49.23 utc:12: Authentication failure for 'admin' from 10.200.200.76. Status was 1.
+gsad gmp:WARNING:2025-08-12 18h49.34 utc:12: Failed to connect to server at /run/gvmd/gvmd.sock: No such file or directory
+gsad gmp:WARNING:2025-08-12 18h49.34 utc:12: Authentication failure for 'admin' from 10.200.200.76. Status was 1.
+gsad gmp:WARNING:2025-08-12 18h50.50 utc:12: Failed to connect to server at /run/gvmd/gvmd.sock: No such file or directory
+gsad gmp:WARNING:2025-08-12 18h50.50 utc:12: Authentication failure for 'admin' from 10.200.200.76. Status was 1.
+```
+
+
 Can't load any scan configs
 
 ```

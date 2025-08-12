@@ -965,6 +965,9 @@ gsad gmp:WARNING:2025-08-12 18h50.50 utc:12: Failed to connect to server at /run
 gsad gmp:WARNING:2025-08-12 18h50.50 utc:12: Authentication failure for 'admin' from 10.200.200.76. Status was 1.
 ```
 
+When I just grab the docker compose file and use the normally installed 
+docker.io and docker-compose-v2 packages, I'm able to log in just fine.
+
 
 Can't load any scan configs
 

@@ -50,6 +50,8 @@ vaultwarden is easier says kevin
 domain -- need a domain name for ssl cert, usually handled w/ dynamic dns
 	point at cs.pdx.edu/pdx.edu
 
+
+
 ## Frigate
 
 ## Jekyll

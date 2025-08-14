@@ -1,41 +1,28 @@
 # Services
 
 ## gitlab
+I grabbed the docker compose file from Gitlab's officiall documentation. I 
+changed the ports to ones that made sense to me. It's important to note that 
+the external HTTP port has to match the internal one or it won't work with 
+CI/CD. I'm not positive why, but I think it has to do with how the links are
+generated. 
 
-### Docker
-```
-services:
-  gitlab:
-    image: gitlab/gitlab-ce:18.0.6-ce.0
-    container_name: gitlab
-    restart: always
-    hostname: 'gitlab'
-    environment:
-      TZ: 'America/Los_Angeles'
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://systemsec-04.cs.pdx.edu:7080'
-    ports:
-      - '7080:7080'
-      - '7022:22'
-      - '4000:4000' # jekyll
-    volumes:
-      - './config:/etc/gitlab'
-      - './logs:/var/log/gitlab'
-      - './data:/var/opt/gitlab'
-    shm_size: '256m'
-```
-kevin says:
-    don't need MTA -- set things that need it to no ops
-    change gitlab port only if port conflict
+It takes a while to spin up, but once it does you can log in with the creds
+root:<password in config/initial_root_password>. I changed the admin password
+right away because the `initial_root_password` file says that the password is
+invalid after 24 hours. 
 
-NOTES:
-spin up docker container 
-login with root:<passwd in config/initial_root_password>
-create user sawyeras
+Then I created a user. Normally it's supposed to send the new user and email
+asking them to set their password, but I didn't want to set up SMTP. Instead, 
+as soon as the user is created, you can change their password as the admin and
+they can sign in with that. When they sign it, it will ask them to change their
+password, and then it works as expected. 
+
 ![ user created page ](./img/gitlab-user.png)
-change password as admin to avoid email req
-able to sign in as created user
-able to create repo, clone, and push
+
+Once I had a user, I was able to create a repository, clone it, and push to it
+as normal. (You can also have a repo as admin, but...)
+
 ```
 $ git clone ssh://git@systemsec-04.cs.pdx.edu:7022/sawyeras/test.git
 Cloning into 'test'...
@@ -63,10 +50,34 @@ Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
 To ssh://systemsec-04.cs.pdx.edu:7022/sawyeras/test.git
    1a48635..9179774  main -> main
 ```
+
 ![updated gitlab repo](./img/gitlab-push.png)
 
-changed root password because default gets removed after 24hrs? 
 
+### Docker
+```
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.0.6-ce.0
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab'
+    environment:
+      TZ: 'America/Los_Angeles'
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://systemsec-04.cs.pdx.edu:7080'
+    ports:
+      - '7080:7080'
+      - '7022:22'
+      - '4000:4000' # jekyll
+    volumes:
+      - './config:/etc/gitlab'
+      - './logs:/var/log/gitlab'
+      - './data:/var/opt/gitlab'
+    shm_size: '256m'
+```
+
+NOTE:
 changed config to make internal ports match internal and change http to
 https. add tz to make cookie check work. then CLEAR COOKIES or it won't
 realize it's been fixed...

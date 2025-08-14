@@ -81,11 +81,6 @@ services:
     shm_size: '256m'
 ```
 
-NOTE:
-changed config to make internal ports match internal and change http to
-https. add tz to make cookie check work. then CLEAR COOKIES or it won't
-realize it's been fixed...
-
 ## bitwarden
 I used the vaultwarden image rather than bitwarden since that was supposed
 to be easier to set up. 

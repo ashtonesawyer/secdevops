@@ -72,8 +72,21 @@ set up a runner according to docs
 
 grabbed gitlab example repo for jekyll
 
+upgrade
+install sudo and vim
+link git to reasonable location
+-> `ln -s /opt/gitlab/embedded/bin/git /usr/local/bin/git 2>/dev/null || true; git --version`
+install ruby-full and build-essential
 added gitlab runner to passwdless sudo
 made custom clone url to http://localhost:7080 for runner
+
+.gitlab-ci.yml
+	sudo gem install
+	local bundle install
+	CI job started working
+
+able to see generated site when running jekyll serve from CI script. Little
+funky, but it's just a POC? 
 
 
 

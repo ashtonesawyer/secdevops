@@ -689,12 +689,18 @@ wireguard client on my local machine.
 
 ![connected to wireguard](./img/wg-connect.png)
 
-
 I can see that I'm connected to the wireguard client, but I don't actually have
 any internet access. I'm not sure how to fix this. I did lots of googling, but 
 didn't come across anything useful. It was mentioned in class that there needs
 to be some kind of bridge between the wireguard network and the VM subnet, but
 I don't know how to set this up correctly. 
+
+### Update
+I was trying to get help from a classmate who was able to make this work. In
+the process of trying to show him the issue I was running into, it ended up 
+working perfectly. So uh... that's cool I guess. 
+
+![pinging Ubunut VM on internal IP](./img/wg-ping.png)
 
 ## Wazuh
 The first thing that the docker install instructions from Wazuh tell you to do

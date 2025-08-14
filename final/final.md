@@ -1,6 +1,29 @@
 # Services
 
 ## gitlab
+
+### Docker
+```
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.0.6-ce.0
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab'
+    environment:
+      TZ: 'America/Los_Angeles'
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://systemsec-04.cs.pdx.edu:7080'
+    ports:
+      - '7080:7080'
+      - '7022:22'
+      - '4000:4000' # jekyll
+    volumes:
+      - './config:/etc/gitlab'
+      - './logs:/var/log/gitlab'
+      - './data:/var/opt/gitlab'
+    shm_size: '256m'
+```
 kevin says:
     don't need MTA -- set things that need it to no ops
     change gitlab port only if port conflict
@@ -49,7 +72,22 @@ https. add tz to make cookie check work. then CLEAR COOKIES or it won't
 realize it's been fixed...
 
 ## bitwarden
-vaultwarden is easier says kevin
+
+### Docker
+```
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    environment:
+      # DOMAIN: "https://vaultwarden.example.com/"  # required when using a reverse proxy;
+      SIGNUPS_ALLOWED: "true" # Deactivate this with "false" after you have created account
+    volumes:
+      - ./vw-data:/data # the path before the : can be changed
+    ports:
+      - 80:80
+```
 
 domain -- need a domain name for ssl cert, usually handled w/ dynamic dns
 	point at cs.pdx.edu/pdx.edu
@@ -60,6 +98,27 @@ ssh -NL 80:noble0:80 bsd
 
 
 ## Frigate
+
+### Docker
+```
+services:
+  frigate:
+    container_name: frigate
+    restart: unless-stopped
+    stop_grace_period: 30s
+    image: ghcr.io/blakeblackshear/frigate:stable
+    volumes:
+      - ./config:/config
+      - ./storage:/media/frigate
+      - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "8971:8971"
+      - "8554:8554" # RTSP feeds
+```
+
 docker compose from logan
 
 spin it up
@@ -87,8 +146,6 @@ made custom clone url to http://localhost:7080 for runner
 
 able to see generated site when running jekyll serve from CI script. Little
 funky, but it's just a POC? 
-
-
 
 # Terraform + Ansible
 kept having a problem with noble0 running out of memory while I was working 

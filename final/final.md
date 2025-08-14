@@ -94,8 +94,9 @@ forwards and then accessing it on `http://localhost`.
  $ ssh -NL 80:192.168.33.66:80 bsd
 ```
 
-![vaultwarden page](./img/vw-page.png)
+![vaultwarden login](./img/vw-login.png)
 
+![vaultwarden page](./img/vw-page.png)
 
 ### Docker
 ```
@@ -114,6 +115,11 @@ services:
 ```
 
 ## Frigate
+I got the docker compose file from a guide that Logan showed me. Once I spun it
+up, I was able to get the credentials from the logs and login. I stopped there 
+because I don't actually have a camera to hook it up to. 
+
+![frigate dashboard](./img/frigate-page.png)
 
 ### Docker
 ```
@@ -134,13 +140,6 @@ services:
       - "8971:8971"
       - "8554:8554" # RTSP feeds
 ```
-
-docker compose from logan
-
-spin it up
-get creds from logs
-login
-nothing to see bc no cameras
 
 ## Jekyll
 set up a runner according to docs

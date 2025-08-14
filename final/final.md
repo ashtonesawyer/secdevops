@@ -12,6 +12,10 @@ root:<password in config/initial_root_password>. I changed the admin password
 right away because the `initial_root_password` file says that the password is
 invalid after 24 hours. 
 
+I also had to add a TZ environment variable in order to login successfully.
+Without it, it would accept the credentials but then throw error 422. If you 
+add the variable and it's still not working, try clearing cookies...
+
 Then I created a user. Normally it's supposed to send the new user and email
 asking them to set their password, but I didn't want to set up SMTP. Instead, 
 as soon as the user is created, you can change their password as the admin and
@@ -142,25 +146,87 @@ services:
 ```
 
 ## Jekyll
-set up a runner according to docs
+I made a jekyll repository for running the pipeline in. Then I started by 
+creating a runner. I set it to run on untagged jobs.
 
-grabbed gitlab example repo for jekyll
+I installed the runner within the gitlab docker container by running commands
+supplied by the setup page. 
 
-upgrade
-install sudo and vim
-link git to reasonable location
--> `ln -s /opt/gitlab/embedded/bin/git /usr/local/bin/git 2>/dev/null || true; git --version`
-install ruby-full and build-essential
-added gitlab runner to passwdless sudo
-made custom clone url to http://localhost:7080 for runner
+![creating runner](./img/ci-runner.png)
 
-.gitlab-ci.yml
-	sudo gem install
-	local bundle install
-	CI job started working
+I grabbed the `.gitlab-ci.yml` and required Jekyll files from one of the gitlab
+example repos. 
 
-able to see generated site when running jekyll serve from CI script. Little
-funky, but it's just a POC? 
+In order to make the job actually complete, I needed to do a little bit more 
+setup.
+
+Within the docker container:
+- `apt upgrade`
+- Install sudo (+ vim for QOL)
+- Create a symbolic link to git in `/usr/local/bin/`
+- Install ruby-full and build-essential
+- Add gitlab-runner user to password-less sudo
+
+In GitLab admin console:
+- Change http clone url to http://localhost:7080
+
+In .gitlab-ci.yml:
+- Change gem install to sudo gem install
+- Have bundle install to a local directory (vendor/bundle)
+
+At this point, the job was able to sucessfully complete and I could download
+the artifact (the output of Jekyll). 
+
+![pipeline complete](./img/ci-pipeline.png)
+
+I also had the pipeline run `jekyll serve` so that I 
+could see the generated site on localhost. In order for it to work, I had to
+add `--host 0.0.0.0` so that I could see it from outside of the container. 
+I also had to add a `4000:4000` port thing to the docker compose file.
+
+I set up an SSH port forward and then was able to see the generated page from
+my local machine. 
+
+![jekyll page](./img/ci-page.png)
+
+It's a little funky, because the CI/CD job doesn't detect that the job has 
+finished, but it works as a proof of concept. 
+
+### Pipeline
+```
+image: ruby:latest
+
+variables:
+  JEKYLL_ENV: production
+  LC_ALL: C.UTF-8
+
+before_script:
+  - sudo gem install bundler
+  - bundle config set path 'vendor/bundle'
+  - bundle install
+
+test:
+  stage: test
+  script:
+  - bundle exec jekyll build -d test
+  artifacts:
+    paths:
+    - test
+  rules:
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+
+pages:
+  stage: deploy
+  script:
+  - bundle exec jekyll build -d public
+  - bundle exec jekyll serve --host 0.0.0.0
+  artifacts:
+    paths:
+    - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
+```
 
 # Terraform + Ansible
 kept having a problem with noble0 running out of memory while I was working 

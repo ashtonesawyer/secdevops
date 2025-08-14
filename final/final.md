@@ -83,6 +83,19 @@ https. add tz to make cookie check work. then CLEAR COOKIES or it won't
 realize it's been fixed...
 
 ## bitwarden
+I used the vaultwarden image rather than bitwarden since that was supposed
+to be easier to set up. 
+
+I tried to set up vaultwarden with HTTPS using DuckDNS created certificates. 
+That did not work. Instead, I was able to access vaultwarden with ssh port
+forwards and then accessing it on `http://localhost`. 
+
+```
+ $ ssh -NL 80:192.168.33.66:80 bsd
+```
+
+![vaultwarden page](./img/vw-page.png)
+
 
 ### Docker
 ```
@@ -99,14 +112,6 @@ services:
     ports:
       - 80:80
 ```
-
-domain -- need a domain name for ssl cert, usually handled w/ dynamic dns
-	point at cs.pdx.edu/pdx.edu
-
-Ended up just doing minimal config and then ssh port forwarding
-ssh -NL 80:noble0:80 bsd
-
-
 
 ## Frigate
 

@@ -44,16 +44,37 @@ To ssh://systemsec-04.cs.pdx.edu:7022/sawyeras/test.git
 
 changed root password because default gets removed after 24hrs? 
 
+changed config to make internal ports match internal and change http to
+https. add tz to make cookie check work. then CLEAR COOKIES or it won't
+realize it's been fixed...
+
 ## bitwarden
 vaultwarden is easier says kevin
 
 domain -- need a domain name for ssl cert, usually handled w/ dynamic dns
 	point at cs.pdx.edu/pdx.edu
 
+Ended up just doing minimal config and then ssh port forwarding
+ssh -NL 80:noble0:80 bsd
+
 
 
 ## Frigate
+docker compose from logan
+
+spin it up
+get creds from logs
+login
+nothing to see bc no cameras
 
 ## Jekyll
+set up a runner according to docs
+
+grabbed gitlab example repo for jekyll
+
+added gitlab runner to passwdless sudo
+made custom clone url to http://localhost:7080 for runner
+
+
 
 # Terraform + Ansible

@@ -78,3 +78,5 @@ made custom clone url to http://localhost:7080 for runner
 
 
 # Terraform + Ansible
+kept having a problem with noble0 running out of memory while I was working 
+on the gitlab + jekyll stuff. changed it so noble0 has 6-8G and bsd has 2-2.5G

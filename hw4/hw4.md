@@ -702,6 +702,34 @@ working perfectly. So uh... that's cool I guess.
 
 ![pinging Ubunut VM on internal IP](./img/wg-ping.png)
 
+### Docker
+```
+  wireguard:
+    container_name: wireguard
+    image: ghcr.io/wg-easy/wg-easy
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+
+    environment:
+      - PASSWORD_HASH=$$2a$$12$$FTITipwicouxuElVfH1bGO8LWTXVlEOXbZzjfE/Mz4shyUewCIhVy 
+      - WG_HOST=systemsec-04.cs.pdx.edu
+
+    volumes:
+      - ./config:/etc/wireguard
+      - /lib/modules:/lib/modules
+
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+
+    restart: unless-stopped
+```
+
 ## Wazuh
 The first thing that the docker install instructions from Wazuh tell you to do
 it increase the `max_map_count` on the host because Wazuh needs there to be a 

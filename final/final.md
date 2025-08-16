@@ -224,5 +224,13 @@ pages:
 ```
 
 # Terraform + Ansible
-kept having a problem with noble0 running out of memory while I was working 
-on the gitlab + jekyll stuff. changed it so noble0 has 6-8G and bsd has 2-2.5G
+I kept my terraform files from homework 4. I did change it so that the FreeBSD
+machine had 2 - 2.5G of memory so that nolbe0 (the larger Ubuntu VM) could have
+6-8G instead of 4-8G. This helped with some issues I was having with the vm 
+running out of resources while I was working on the Gitlab + Jekyll stuff. 
+
+I ran out of time to properly work on and test the Ansible stuff. However, 
+since none of the non-Jekyll services needed anything other than spinning up 
+the container, it *should* work with my previous scheme of just dropping in
+a docker compose file and calling it a day. 
+

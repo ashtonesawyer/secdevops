@@ -15,7 +15,7 @@ resource "proxmox_vm_qemu" "bastion" {
 	ciupgrade	= true
 	cicustom	= "vendor=local:snippets/freebsd.yaml"
 	ciuser		= "sawyeras"
-   cipassword = "PASSWD_HASH"
+    cipassword = "PASSWD_HASH"
 	sshkeys		= "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDIqtuUWB+MxigJdtOsNdm35slHigjrmvInq3RLMxiuY ashto@DESKTOP-D9IQNRC"
 	
 
@@ -71,7 +71,7 @@ resource "proxmox_vm_qemu" "server0" {
 	ciupgrade	= true
 	cicustom	= "vendor=local:snippets/vendor.yaml"
 	ciuser		= "sawyeras"
-   cipassword = "PASSWD_HASH"
+    cipassword = "PASSWD_HASH"
 	sshkeys		= "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDIqtuUWB+MxigJdtOsNdm35slHigjrmvInq3RLMxiuY ashto@DESKTOP-D9IQNRC"
 
 	cpu {
@@ -119,7 +119,7 @@ resource "proxmox_vm_qemu" "server1" {
 	ciupgrade	= true
 	cicustom	= "vendor=local:snippets/vendor.yaml"
 	ciuser		= "sawyeras"
-   cipassword = "PASSWD_HASH"
+    cipassword = "PASSWD_HASH"
 	sshkeys		= "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDIqtuUWB+MxigJdtOsNdm35slHigjrmvInq3RLMxiuY ashto@DESKTOP-D9IQNRC"
 
 	cpu {

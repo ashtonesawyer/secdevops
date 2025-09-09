@@ -1,3 +1,8 @@
+- [Docker Compose](#docker-compose)
+  - [Pi-Hole](#pi-hole)
+    - [The Guide](#the-guide)
+  - [Samba](#samba)
+
 # Docker Compose
 One of the first things that I did was add myself to the `docker` group so that
 I wouldn't have to keep running `sudo`. 
@@ -151,5 +156,6 @@ and tried accessing it from my local machine. It worked like a charm.
 ![samba login prompt](./img/samba-login.png)
 
 ![test file in samba directory](./img/samba-folder.png)
+
 
 

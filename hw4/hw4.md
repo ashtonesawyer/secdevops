@@ -1,3 +1,39 @@
+- [Pre-template ProxMox Setup](#pre-template-proxmox-setup)
+  - [Remove Liscence Warnings](#remove-liscence-warnings)
+  - [Set up SNAT](#set-up-snat)
+  - [Set up NAT forwarding](#set-up-nat-forwarding)
+  - [Move SSH Port](#move-ssh-port)
+- [Setting Up Templates](#setting-up-templates)
+  - [Cloud Images](#cloud-images)
+  - [Setting up the Ubuntu Template](#setting-up-the-ubuntu-template)
+  - [Setting up the FreeBSD Template](#setting-up-the-freebsd-template)
+- [Terraform (OpenTofu)](#terraform-opentofu)
+  - [providers.tf](#providerstf)
+  - [main.tf](#maintf)
+  - [Running](#running)
+- [Ansible](#ansible)
+  - [Structure](#structure)
+  - [Inventory](#inventory)
+  - [Files Directory](#files-directory)
+  - [group_vars](#group_vars)
+  - [Pre-ansible Config](#pre-ansible-config)
+  - [Plays](#plays)
+  - [Roles](#roles)
+    - [pkgs](#pkgs)
+    - [bsd](#bsd)
+    - [dev-env](#dev-env)
+    - [services](#services)
+    - [updgrade](#upgrade)
+    - [ubuntu](#ubuntu)
+    - [noble\[01\]](#noble01)
+- [Services](#services)
+  - [Wireguard](#wireguard)
+    - [Update](#update)
+    - [Docker](#docker)
+  - [Wazuh](#wazuh)
+  - [Semgrep](#semgrep)
+  - [GVM](#gvm)
+
 # Pre-template ProxMox Setup
 Before I could make the templates, some set up had to be done on Proxmox
 
@@ -402,7 +438,7 @@ certain tasks can be in the common role and still work even though the actual
 content is different between the OSes. 
 
 ## Pre-ansible Config
-The way I currently have things set up, I can run ansible immediately after
+The way I currently have things set up, I can't run ansible immediately after
 terraform finishes creating the VMs. There are a couple reasons for this:
 
 1. cloudinit doesn't work properly for my FreeBSD image

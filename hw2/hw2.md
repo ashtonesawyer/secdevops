@@ -1,3 +1,12 @@
+- [SSH](#ssh)
+  - [Setting up ssh-alt](#setting-up-ssh-alt)
+  - [Redirecting SSH Traffic](#redirecting-ssh-traffic)
+- [Suricata](#suricata)
+  - [Install](#install)
+  - [Config](#config)
+  - [SMBGhost](#smbghost)
+- [hw2.sh](#hw2sh)
+  
 # SSH 
 The goal is for it to look like the FreeBSD host is running all provided 
 services. A part of doing this is to redirect traffic from bsd to the 
